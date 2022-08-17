@@ -37,7 +37,7 @@ class CustomTextBox extends StatelessWidget {
           ),
           Container(
             height: 50,
-            width: 200,
+            width: 260,
             child: TextField(
               onChanged: onChange(),
               controller: controller,

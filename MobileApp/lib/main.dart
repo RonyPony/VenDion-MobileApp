@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/routes.dart';
 import 'package:vendion/screens/login_screen.dart';
+import 'package:vendion/services/authentication_service.dart';
+import 'package:vendion/services/user_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,16 +15,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      routes: routes,
-      
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) =>
+              AuthenticationProvider(AuthenticationService(), UserService()),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'VenDionApp',
+        routes: routes,
+
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: LoginScreen(),
+
+        // home: const MyHomePage(title: 'Loading'),
       ),
-      home: LoginScreen(),
-      
-      // home: const MyHomePage(title: 'Loading'),
     );
   }
 }

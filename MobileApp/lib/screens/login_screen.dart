@@ -1,8 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:vendion/contracts/auth_contract.dart';
+import 'package:vendion/models/user_login_response.dart';
+import 'package:vendion/models/user_response.dart';
+import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/screens/home_screen.dart';
 import 'package:vendion/screens/register_screen.dart';
 
+import '../models/client_user.dart';
 import '../widgets/main_button_widget.dart';
 import '../widgets/textBox_widget.dart';
 
@@ -37,6 +44,15 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+  @override
+  void initState() {
+    super.initState();
+    if (kDebugMode) {
+      _userController.text = "ronel.cruz.a8@gmail.com";
+      _passController.text = "ronel0808";  
+    }
+    
   }
 
   _buildLogo() {
@@ -111,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onChange: () {},
           svg: svg,
           text: "Clave",
-          isPassword: false,
+          isPassword: true,
           controller: _passController,
         ));
   }
@@ -136,9 +152,21 @@ class _LoginScreenState extends State<LoginScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 30),
       child: GestureDetector(
-        onTap: (){
-          Navigator.pushNamedAndRemoveUntil(
-              context, HomeScreen.routeName, (route) => false);
+        onTap: ()async{
+          String username = _userController.text;
+          String pass = _passController.text;
+          final authProvider = Provider.of<AuthenticationProvider>(context,listen: false);
+          ClientUser userInfo = ClientUser(email: username,password: pass);
+          
+          UserResponse loggedin = await authProvider.authenticateUser(userInfo, true);
+          if (!loggedin.hasError!) {
+            Navigator.pushNamedAndRemoveUntil(
+                context, HomeScreen.routeName, (route) => false);
+          }else{
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text("Ups, something wrong happened - ${loggedin.errorInfo}"),
+            ));
+          }
         },
         child: CustomBtn(
           onTap: () {

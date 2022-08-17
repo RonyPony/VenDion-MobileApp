@@ -1,7 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:vendion/screens/favorites_screen.dart';
+import 'package:vendion/screens/filters_screen.dart';
 import 'package:vendion/screens/home_screen.dart';
+import 'package:vendion/screens/login_screen.dart';
+import 'package:vendion/screens/notifications_screen.dart';
+import 'package:vendion/screens/profile_screen.dart';
 
 class GeneralDrawer extends StatelessWidget {
   @override
@@ -31,8 +36,7 @@ class GeneralDrawer extends StatelessWidget {
               style: TextStyle(color: Colors.black),
             ),
             onTap: () {
-              // Update the state of the app.
-              // ...
+              Navigator.pushNamedAndRemoveUntil(context, FavoriteScreen.routeName, (route) => false);
             },
           ),
           ListTile(
@@ -40,8 +44,7 @@ class GeneralDrawer extends StatelessWidget {
               style: TextStyle(color: Colors.black),
             ),
             onTap: () {
-              // Update the state of the app.
-              // ...
+              Navigator.pushNamed(context, ProfileScreen.routeName);
             },
           ),
           ListTile(
@@ -56,31 +59,27 @@ class GeneralDrawer extends StatelessWidget {
           ListTile(
             title: const Text('Filters',style: TextStyle(color: Colors.black),),
             onTap: () {
-              // Update the state of the app.
-              // ...
+              Navigator.pushNamed(context, FiltersScreen.routeName);
             },
           ),
           ListTile(
             title: const Text('Notifications',style: TextStyle(color: Colors.black),),
             onTap: () {
-              // Update the state of the app.
-              // ...
+              Navigator.pushNamed(context, NotificationsScreen.routeName);
             },
           ),
           ListTile(
             title: const Text('Settings',style: TextStyle(color: Colors.black,
               ),),
             onTap: () {
-              // Update the state of the app.
-              // ...
+              // Navigator.pushNamed(context, )
             },
           ),
 SizedBox(height: MediaQuery.of(context).size.height*.25,),
           ListTile(
             title: const Text('Logout',style: TextStyle(color: Colors.black),),
             onTap: () {
-              // Update the state of the app.
-              // ...
+              Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
             },
           ),
         ],

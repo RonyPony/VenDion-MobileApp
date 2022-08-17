@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:vendion/screens/car_details_screen.dart';
 import 'package:vendion/screens/filters_screen.dart';
 import 'package:vendion/screens/notifications_screen.dart';
 import 'package:vendion/widgets/bottom_menu.dart';
 import 'package:vendion/widgets/carrousel.dart';
 import 'package:vendion/widgets/drawer.dart';
 
+import '../widgets/main_button_widget.dart';
 import '../widgets/textBox_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //1 is new
   //2 is used
   int _carConditions = 0;
+  bool isSearching = false;
 
   @override
   Widget build(BuildContext context) {
@@ -148,51 +151,81 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _buildSearchSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        Container(
-          height: 65,
-          width: MediaQuery.of(context).size.width * .8,
-          decoration: BoxDecoration(
-              color: const Color(0xffedeeef),
-              borderRadius: BorderRadius.circular(10)),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, right: 10),
-                  child: SvgPicture.asset("assets/search.svg"),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 65,
+              width: MediaQuery.of(context).size.width * .8,
+              decoration: BoxDecoration(
+                  color: const Color(0xffedeeef),
+                  borderRadius: BorderRadius.circular(10)),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 10),
+                      child: SvgPicture.asset("assets/search.svg"),
+                    ),
+                    Container(
+                      height: MediaQuery.of(context).size.height * .07,
+                      width: MediaQuery.of(context).size.width * .65,
+                      child: TextField(
+                        onChanged: (value) {
+                          if (value == "") {
+                            isSearching = false;
+                          }else{
+                            isSearching = true;
+                          }
+                          setState(() {
+                            
+                          });
+                        },
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                                borderSide: BorderSide.none,
+                                borderRadius: BorderRadius.circular(20)),
+                            hintText: "Search for Honda Pilot 7-Passenger"),
+                      ),
+                    )
+                  ],
                 ),
-                Container(
-                  height: MediaQuery.of(context).size.height * .07,
-                  width: MediaQuery.of(context).size.width * .65,
-                  child: TextField(
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.circular(20)),
-                        hintText: "Search for Honda Pilot 7-Passenger"),
-                  ),
-                )
-              ],
+              ),
             ),
-          ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, FiltersScreen.routeName);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10),
+                child: SvgPicture.asset("assets/filter.svg"),
+              ),
+            )
+          ],
         ),
-        GestureDetector(
-          onTap: () {
-            Navigator.pushNamed(context, FiltersScreen.routeName);
-          },
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: SvgPicture.asset("assets/filter.svg"),
-          ),
-        )
+          isSearching?_buildSearchBtn():SizedBox()
       ],
     );
   }
 
+_buildSearchBtn() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pushNamedAndRemoveUntil(
+              context, HomeScreen.routeName, (route) => false);
+        },
+        child: CustomBtn(
+          onTap: () {},
+          text: "Search",
+        ),
+      ),
+    );
+  }
   _buildCarrouser() {
     return Padding(
       padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
@@ -202,67 +235,72 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _buildaRecommended(
       bool liked, bool hasVideo, String name, String finalPrice) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: Image.asset('assets/audi.png'),
-            ),
-            hasVideo
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 150, left: 15),
-                    child: Image.asset("assets/video.png"),
-                  )
-                : SizedBox(),
-            liked
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 10, left: 150),
-                    child: SvgPicture.asset("assets/liked.svg"),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.only(top: 10, left: 150),
-                    child: SvgPicture.asset(
-                      "assets/notliked.svg",
-                      width: 26,
-                    ),
-                  )
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: SizedBox(
-            width: 174,
-            child: Text(
-              name,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontFamily: "Poppins",
-                fontWeight: FontWeight.w500,
+    return GestureDetector(
+      onTap: (){
+        Navigator.pushNamed(context, VehicleDetails.routeName);
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: Image.asset('assets/audi.png'),
+              ),
+              hasVideo
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 150, left: 15),
+                      child: Image.asset("assets/video.png"),
+                    )
+                  : SizedBox(),
+              liked
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 10, left: 150),
+                      child: SvgPicture.asset("assets/liked.svg"),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 10, left: 150),
+                      child: SvgPicture.asset(
+                        "assets/notliked.svg",
+                        width: 26,
+                      ),
+                    )
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: SizedBox(
+              width: 174,
+              child: Text(
+                name,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: Opacity(
-            opacity: 0.50,
-            child: Text(
-              finalPrice,
-              style: TextStyle(
-                color: Color(0xff040415),
-                fontSize: 12,
-                fontFamily: "Poppins",
-                fontWeight: FontWeight.w500,
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Opacity(
+              opacity: 0.50,
+              child: Text(
+                finalPrice,
+                style: TextStyle(
+                  color: Color(0xff040415),
+                  fontSize: 12,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-        )
-      ],
+          )
+        ],
+      ),
     );
   }
 }
