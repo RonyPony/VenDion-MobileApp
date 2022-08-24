@@ -276,6 +276,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
           },
           child: CustomBtn(
             onTap: () {},
+            enable: true,
             text: "Buy Now",
           ),
         ),

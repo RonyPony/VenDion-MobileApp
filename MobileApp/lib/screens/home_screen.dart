@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
+import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/screens/car_details_screen.dart';
 import 'package:vendion/screens/filters_screen.dart';
 import 'package:vendion/screens/notifications_screen.dart';
@@ -7,6 +9,7 @@ import 'package:vendion/widgets/bottom_menu.dart';
 import 'package:vendion/widgets/carrousel.dart';
 import 'package:vendion/widgets/drawer.dart';
 
+import '../models/vehicles.dart';
 import '../widgets/main_button_widget.dart';
 import '../widgets/textBox_widget.dart';
 
@@ -24,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _carConditions = 0;
   bool isSearching = false;
 
+  bool isSearchingLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,9 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 20),
               child: GestureDetector(
-                onTap: (){
-                  Navigator.pushNamed(context, NotificationsScreen.routeName);
-                },
+                  onTap: () {
+                    Navigator.pushNamed(context, NotificationsScreen.routeName);
+                  },
                   child: SvgPicture.asset("assets/notification-active.svg")),
             )
           ],
@@ -71,12 +76,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            BottomMenu(currentIndex: 0,),
+            BottomMenu(
+              currentIndex: 0,
+            ),
           ],
         ));
   }
 
   _buildRecommendedSection(double ancho) {
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    Future<List<Vehicle>> _allVehicles =
+        vehicleProvider.getAllAvailableVehicles();
+
     return Padding(
       padding: const EdgeInsets.only(left: 8, right: 8, top: 20),
       child: Column(
@@ -117,34 +129,71 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 15, top: 20),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildaRecommended(true, true, "Audi Q7 Sport", "US. 23,000"),
-                  _buildaRecommended(
-                      false, true, "Audi Q7 Sport", "US. 23,000"),
-                ],
-              ),
-            ),
+          FutureBuilder<List<Vehicle>>(
+            future: _allVehicles,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+              if (snapshot.hasError) {
+                return Text("Error");
+              }
+              if (snapshot.hasData &&
+                  snapshot.connectionState == ConnectionState.done) {
+                // return Text(snapshot.data![0].name!);
+                return Container(
+                  // color: Colors.red,
+                  height: MediaQuery.of(context).size.height,
+                  width:  MediaQuery.of(context).size.width,
+                  child: ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      Vehicle project = snapshot.data![index];
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 15, top: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildaRecommended(true, true, project.name!,project.price.toString()),                          
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }
+
+              return Text("No info");
+            },
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 15, top: 20),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildaRecommended(true, true, "Audi Q7 Sport", "US. 23,000"),
-                  _buildaRecommended(
-                      false, true, "Audi Q7 Sport", "US. 23,000"),
-                ],
-              ),
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.only(left: 15, top: 20),
+          //   child: SingleChildScrollView(
+          //     scrollDirection: Axis.horizontal,
+          //     child: Row(
+          //       mainAxisAlignment: MainAxisAlignment.center,
+          //       children: [
+          //         _buildaRecommended(true, true, "Audi Q7 Sport", "US. 23,000"),
+          //         _buildaRecommended(
+          //             false, true, "Audi Q7 Sport", "US. 23,000"),
+          //       ],
+          //     ),
+          //   ),
+          // ),
+          // Padding(
+          //   padding: const EdgeInsets.only(left: 15, top: 20),
+          //   child: SingleChildScrollView(
+          //     scrollDirection: Axis.horizontal,
+          //     child: Row(
+          //       mainAxisAlignment: MainAxisAlignment.center,
+          //       children: [
+          //         _buildaRecommended(true, true, "Audi Q7 Sport", "US. 23,000"),
+          //         _buildaRecommended(
+          //             false, true, "Audi Q7 Sport", "US. 23,000"),
+          //       ],
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -177,12 +226,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         onChanged: (value) {
                           if (value == "") {
                             isSearching = false;
-                          }else{
+                          } else {
                             isSearching = true;
                           }
-                          setState(() {
-                            
-                          });
+                          setState(() {});
                         },
                         decoration: InputDecoration(
                             border: OutlineInputBorder(
@@ -206,12 +253,12 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           ],
         ),
-          isSearching?_buildSearchBtn():SizedBox()
+        isSearching ? _buildSearchBtn() : SizedBox()
       ],
     );
   }
 
-_buildSearchBtn() {
+  _buildSearchBtn() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: GestureDetector(
@@ -220,12 +267,19 @@ _buildSearchBtn() {
               context, HomeScreen.routeName, (route) => false);
         },
         child: CustomBtn(
-          onTap: () {},
+          enable: !isSearchingLoading,
+          loadingText: "Searching...",
+          onTap: () {
+            setState(() {
+              isSearchingLoading = true;
+            });
+          },
           text: "Search",
         ),
       ),
     );
   }
+
   _buildCarrouser() {
     return Padding(
       padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
@@ -236,7 +290,7 @@ _buildSearchBtn() {
   _buildaRecommended(
       bool liked, bool hasVideo, String name, String finalPrice) {
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         Navigator.pushNamed(context, VehicleDetails.routeName);
       },
       child: Column(

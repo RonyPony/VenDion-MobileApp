@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/contracts/vehicles_contract.dart';
 import 'package:vendion/providers/auth_provider.dart';
+import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/routes.dart';
 import 'package:vendion/screens/login_screen.dart';
 import 'package:vendion/services/authentication_service.dart';
 import 'package:vendion/services/user_service.dart';
+import 'package:vendion/services/vehicle_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +23,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) =>
               AuthenticationProvider(AuthenticationService(), UserService()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              VehiclesProvider(VehicleService()),
         ),
       ],
       child: MaterialApp(

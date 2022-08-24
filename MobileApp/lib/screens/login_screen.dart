@@ -26,6 +26,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _userController = TextEditingController();
 
   final TextEditingController _passController = TextEditingController();
+  
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -151,13 +153,17 @@ class _LoginScreenState extends State<LoginScreen> {
   _buildLoginBtn() {
     return Padding(
       padding: const EdgeInsets.only(top: 30),
-      child: GestureDetector(
-        onTap: ()async{
+      child: CustomBtn(
+        enable:!_loading,
+        loadingText: "Validando...",
+        onTap:() async {
+          setState(() {
+            _loading = true;
+          });
           String username = _userController.text;
           String pass = _passController.text;
           final authProvider = Provider.of<AuthenticationProvider>(context,listen: false);
-          ClientUser userInfo = ClientUser(email: username,password: pass);
-          
+          ClientUser userInfo = ClientUser(email: username,password: pass);          
           UserResponse loggedin = await authProvider.authenticateUser(userInfo, true);
           if (!loggedin.hasError!) {
             Navigator.pushNamedAndRemoveUntil(
@@ -167,13 +173,11 @@ class _LoginScreenState extends State<LoginScreen> {
               content: Text("Ups, something wrong happened - ${loggedin.errorInfo}"),
             ));
           }
+          setState(() {
+            _loading = false;
+          });
         },
-        child: CustomBtn(
-          onTap: () {
-            
-          },
-          text: "Login",
-        ),
+        text: "Login",
       ),
     );
   }
