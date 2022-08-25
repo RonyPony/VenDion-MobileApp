@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/cli_commands.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/screens/car_details_screen.dart';
 import 'package:vendion/screens/filters_screen.dart';
@@ -144,19 +148,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Container(
                   // color: Colors.red,
                   height: MediaQuery.of(context).size.height,
-                  width:  MediaQuery.of(context).size.width,
+                  width: MediaQuery.of(context).size.width,
                   child: ListView.builder(
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       Vehicle project = snapshot.data![index];
                       return Padding(
-                        padding: const EdgeInsets.only(left: 15, top: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _buildaRecommended(true, true, project.name!,project.price.toString()),                          
-                          ],
-                        ),
+                        padding: const EdgeInsets.only(top: 20),
+                        child: _buildaRecommended(project, vehicleProvider),
                       );
                     },
                   ),
@@ -287,73 +286,124 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  _buildaRecommended(
-      bool liked, bool hasVideo, String name, String finalPrice) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, VehicleDetails.routeName);
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: Image.asset('assets/audi.png'),
-              ),
-              hasVideo
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 150, left: 15),
-                      child: Image.asset("assets/video.png"),
-                    )
-                  : SizedBox(),
-              liked
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 10, left: 150),
-                      child: SvgPicture.asset("assets/liked.svg"),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 10, left: 150),
-                      child: SvgPicture.asset(
-                        "assets/notliked.svg",
-                        width: 26,
+  _buildaRecommended(Vehicle vehicle, VehiclesProvider provider) {
+    bool hasVideo = true;
+    bool liked = true;
+    Future<VehiclePhoto> _carPhoto = provider.getVechiclePhoto(vehicle.id!);
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * .1),
+      // color: Colors.red.withOpacity(.5),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pushNamed(context, VehicleDetails.routeName);
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FutureBuilder<VehiclePhoto>(
+              future: _carPhoto,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                }
+                if (snapshot.hasError) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        "assets/placeholder.png",
+                        scale: 3,
                       ),
-                    )
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: SizedBox(
-              width: 174,
-              child: Text(
-                name,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontFamily: "Poppins",
-                  fontWeight: FontWeight.w500,
+                    ],
+                  );
+                }
+                if (snapshot.hasData &&
+                    snapshot.connectionState == ConnectionState.done) {
+                  return Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              fit: BoxFit.fill,
+                              image: Image.memory(
+                                      base64Decode(snapshot.data!.image!))
+                                  .image,
+                            ),
+                          ),
+                        ),
+                      ),
+                      hasVideo
+                          ? Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 160, left: 15),
+                              child: Image.asset("assets/video.png"),
+                            )
+                          : SizedBox(),
+                      liked
+                          ? Padding(
+                              padding: EdgeInsets.only(
+                                  top: 10,
+                                  left:
+                                      MediaQuery.of(context).size.width * .65),
+                              child: GestureDetector(
+                                onTap: (){
+                                  print("Liked ${vehicle.name}");
+                                },
+                                  child: SvgPicture.asset("assets/liked.svg")),
+                            )
+                          : Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 10, left: 150),
+                              child: SvgPicture.asset(
+                                "assets/notliked.svg",
+                                width: 26,
+                              ),
+                            )
+                    ],
+                  );
+                }
+                return Text("No data");
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, top: 10),
+              child: SizedBox(
+                width: 174,
+                child: Text(
+                  vehicle.name!.capitalize(),
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 18,
+                    fontFamily: "Poppins",
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: Opacity(
-              opacity: 0.50,
-              child: Text(
-                finalPrice,
-                style: TextStyle(
-                  color: Color(0xff040415),
-                  fontSize: 12,
-                  fontFamily: "Poppins",
-                  fontWeight: FontWeight.w500,
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Opacity(
+                opacity: 0.50,
+                child: Text(
+                  "Price: ${vehicle.price.toString()}  |  Year: ${vehicle.year}",
+                  style: TextStyle(
+                    color: Color(0xff040415),
+                    fontSize: 12,
+                    fontFamily: "Poppins",
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
