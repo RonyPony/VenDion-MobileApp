@@ -1,69 +1,75 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:vendion/models/vehicle_photo.dart';
+import 'package:vendion/models/vehicles.dart';
+import 'package:vendion/providers/vehicles_provider.dart';
 
 class Carrousel extends StatelessWidget {
   ScrollController controller = ScrollController();
+  List<Vehicle> list = [];
 
+  Carrousel(List<Vehicle> info) {
+    list = info;
+  }
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
+      scrollDirection: Axis.horizontal,
       child: Column(
         children: [
-          _buildCarrousell(),
-          
-        
+          _buildCarrousell(context),
         ],
       ),
     );
   }
 
-  _buildAphoto(bool isSpetial, String descri) {
+  _buildAphoto(bool isSpetial, String descri, Image photo) {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: Container(
         width: 300,
         child: Stack(
           children: [
-            Container(
-                child: Image.asset(
-              "assets/Tesla.png",
-            )),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: photo),
             Padding(
               padding: const EdgeInsets.only(top: 140),
-              child: descri.length>44?SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(
-                          left: 10, right: 10, top: 5, bottom: 5),
-                      decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(.5),
-                          borderRadius: BorderRadius.circular(10)),
-                      child: Text(
-                        descri,
-                        style: TextStyle(color: Colors.black),
+              child: descri.length > 44
+                  ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.only(
+                            left: 10, right: 10, top: 5, bottom: 5),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(.5),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Text(
+                          descri,
+                          style: TextStyle(color: Colors.black),
+                        ),
                       ),
+                    ],
+                  )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.only(
+                              left: 10, right: 10, top: 5, bottom: 5),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(.5),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Text(
+                            descri,
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ): Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.only(
-                        left: 10, right: 10, top: 5, bottom: 5),
-                    decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.5),
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Text(
-                      descri,
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ),
-                ],
-              ),
             ),
             isSpetial
                 ? Padding(
@@ -103,20 +109,50 @@ class Carrousel extends StatelessWidget {
       ),
     );
   }
-  
-  
-  
-  _buildCarrousell() {
-    return SingleChildScrollView(
-      controller: controller,
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildAphoto(true, "Tesla model x la para de paras grasa only grasa"),
-          _buildAphoto(false, "Excelente vehiculo"),
-          _buildAphoto(true, "Nuevesito"),
-        ],
-      ),
+
+  _buildCarrousell(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width * .9,
+          height: MediaQuery.of(context).size.height * .3,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: list.length,
+            itemBuilder: (context, index) {
+              final photoProvider =
+                  Provider.of<VehiclesProvider>(context, listen: false);
+              Future<VehiclePhoto> vehiclePhoto =
+                  photoProvider.getVechiclePhoto(list[index].id!);
+              return FutureBuilder<VehiclePhoto>(
+                future: vehiclePhoto,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return LinearProgressIndicator(
+                      color: Color(0xffff5b00),
+                      backgroundColor: Colors.white,
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return Text("Error");
+                  }
+                  if (snapshot.hasData &&
+                      snapshot.connectionState == ConnectionState.done) {
+                    return _buildAphoto(true, list[index].description!,
+                        Image.memory(base64Decode(snapshot.data!.image!)));
+                  }
+
+                  return Text(
+                      "Ups, something happened trying to get the offers");
+                },
+              );
+            },
+          ),
+        ),
+        // _buildAphoto(true, "Tesla model x la para de paras grasa only grasa"),
+        // _buildAphoto(false, "Excelente vehiculo"),
+        // _buildAphoto(true, "Nuevesito"),
+      ],
     );
   }
 }

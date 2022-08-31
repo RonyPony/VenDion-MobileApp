@@ -65,12 +65,12 @@ class _BottomMenuState extends State<BottomMenu> {
       return Align(
         alignment: Alignment.bottomCenter,
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 0, top: 0, left: 0, right: 0),
+          padding: const EdgeInsets.only(bottom:0, top: 0, left: 0, right: 0),
           child: Container(
-            padding: EdgeInsets.only(bottom: 10),
+            padding: EdgeInsets.only(bottom: 0),
             decoration: BoxDecoration(
                 color: Color(0xffff5b00),
-                borderRadius: BorderRadius.circular(50)),
+                borderRadius: BorderRadius.circular(40)),
             child: BottomNavigationBar(
               elevation: 0,
               showSelectedLabels: false,

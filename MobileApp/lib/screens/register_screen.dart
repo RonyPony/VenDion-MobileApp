@@ -42,7 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     const String assetName = 'assets/logo.svg';
     final Widget svg = SvgPicture.asset(assetName, semanticsLabel: 'Acme Logo');
     return Padding(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * .03),
+      padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * .05),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -256,7 +256,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   _buildAlreadyMember() {
     return Padding(
-      padding: const EdgeInsets.only(top: 30,bottom: 10),
+      padding: const EdgeInsets.only(top: 10,bottom: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children:  [

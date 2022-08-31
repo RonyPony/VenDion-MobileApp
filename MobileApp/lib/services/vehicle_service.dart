@@ -67,4 +67,65 @@ class VehicleService implements VehiclesContract {
     }
   }
   
+  //response = await client.get<List>('api/photos/gallery/'+id.toString());
+  @override
+  Future<List<VehiclePhoto>> getVehicleGallery(int id) async {
+    Response? response;
+   List<VehiclePhoto>? dataResponse;
+    try {
+      response = await client.get('api/photos/gallery/' + id.toString());
+      if (response.statusCode == 200) {
+        dataResponse = List<VehiclePhoto>.from(
+            response.data.map((model) => VehiclePhoto.fromJson(model)));
+
+        return dataResponse;
+      } else {
+        if (response.statusCode == 404) {
+          return dataResponse!;
+        } else {
+          return dataResponse!;
+        }
+      }
+    } on DioError catch (e) {
+      if (e.response!.statusCode == 400) {
+        return dataResponse!;
+      } else {
+        return dataResponse!;
+      }
+    } catch (e) {
+      print(e);
+      return dataResponse!;
+    }
+  }
+  
+  @override
+  Future<List<Vehicle>> getAllOfferVehicles() async{
+    Response? response;
+   List<Vehicle>? dataResponse;
+    try {
+      response = await client.get('api/vehicle/offer');
+      if (response.statusCode == 200) {
+        dataResponse = List<Vehicle>.from(
+            response.data.map((model) => Vehicle.fromJson(model)));
+
+        return dataResponse;
+      } else {
+        if (response.statusCode == 404) {
+          return dataResponse!;
+        } else {
+          return dataResponse!;
+        }
+      }
+    } on DioError catch (e) {
+      if (e.response!.statusCode == 400) {
+        return dataResponse!;
+      } else {
+        return dataResponse!;
+      }
+    } catch (e) {
+      print(e);
+      return dataResponse!;
+    }
+  }
+  
 }

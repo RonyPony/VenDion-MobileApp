@@ -65,9 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        body: Stack(
+        body:  Stack(
           children: [
             SingleChildScrollView(
+              
               child: Column(
                 children: [
                   _buildSearchSection(),
@@ -99,45 +100,42 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  "Recommended",
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "Recommended",
+                style: TextStyle(
+                  color: Color(0xff040415),
+                  fontSize: 20,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(
+                width: ancho,
+              ),
+              Opacity(
+                opacity: 0.40,
+                child: Text(
+                  "See all",
+                  textAlign: TextAlign.right,
                   style: TextStyle(
                     color: Color(0xff040415),
-                    fontSize: 20,
+                    fontSize: 16,
                     fontFamily: "Poppins",
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(
-                  width: ancho,
-                ),
-                Opacity(
-                  opacity: 0.40,
-                  child: Text(
-                    "See all",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      color: Color(0xff040415),
-                      fontSize: 16,
-                      fontFamily: "Poppins",
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                )
-              ],
-            ),
+              )
+            ],
           ),
           FutureBuilder<List<Vehicle>>(
             future: _allVehicles,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
+                return CircularProgressIndicator(color: Color(0xffff5b00));
               }
               if (snapshot.hasError) {
                 return Text("Error");
@@ -147,9 +145,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 // return Text(snapshot.data![0].name!);
                 return Container(
                   // color: Colors.red,
+                  // padding: EdgeInsets.only(bottom: 50),
                   height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width,
                   child: ListView.builder(
+                    // shrinkWrap: true,
+                    // physics: const ClampingScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       Vehicle project = snapshot.data![index];
@@ -280,9 +282,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _buildCarrouser() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
-      child: Carrousel(),
+    final vehicleProvider = Provider.of<VehiclesProvider>(context,listen: false);
+    Future<List<Vehicle>> offers = vehicleProvider.getAllOfferVehicle();
+    return FutureBuilder<List<Vehicle>>(
+      future: offers,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return LinearProgressIndicator(
+            color: Color(0xffff5b00),
+            backgroundColor: Colors.white,
+          );
+        }
+        if (snapshot.hasError) {
+          return Text("Error");
+        }
+        if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+            child: Carrousel(snapshot.data!),
+          );
+        }
+
+        return Text("No content available");
+      },
     );
   }
 
@@ -297,7 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // color: Colors.red.withOpacity(.5),
       child: GestureDetector(
         onTap: () {
-          Navigator.pushNamed(context, VehicleDetails.routeName);
+          Navigator.pushNamed(context, VehicleDetails.routeName,arguments: vehicle);
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -307,7 +329,13 @@ class _HomeScreenState extends State<HomeScreen> {
               future: _carPhoto,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                  
+                    children: [
+                      CircularProgressIndicator(color: Color(0xffff5b00),),
+                    ],
+                  );
                 }
                 if (snapshot.hasError) {
                   return Row(
@@ -350,13 +378,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? Padding(
                               padding: EdgeInsets.only(
                                   top: 10,
-                                  left:
-                                      MediaQuery.of(context).size.width * .65),
+                                  left: MediaQuery.of(context).size.width *
+                                      .65),
                               child: GestureDetector(
-                                onTap: (){
-                                  print("Liked ${vehicle.name}");
-                                },
-                                  child: SvgPicture.asset("assets/liked.svg")),
+                                  onTap: () {
+                                    print("Liked ${vehicle.name}");
+                                  },
+                                  child:
+                                      SvgPicture.asset("assets/liked.svg")),
                             )
                           : Padding(
                               padding:
