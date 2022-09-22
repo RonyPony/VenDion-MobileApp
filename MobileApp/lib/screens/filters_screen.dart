@@ -196,7 +196,7 @@ class _StateFilterScreen extends State<FiltersScreen> {
       future: brands,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator(color: Color(0xffff5b00),);
+          return LinearProgressIndicator(color: Color(0xffff5b00),backgroundColor: Colors.white,);
         }
         if (snapshot.hasError) {
           return Text("Error");

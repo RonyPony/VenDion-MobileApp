@@ -36,7 +36,7 @@ class _CustomPickerState extends State<CustomPicker> {
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
               // Provide a background color for the popup.
-              color: Color(0xffff5b00).withOpacity(.5),
+              color: Colors.white,
               
               // Use a SafeArea widget to avoid system overlaps.
               child: SafeArea(
@@ -94,7 +94,7 @@ class _CustomPickerState extends State<CustomPicker> {
                               child: Text(
                                 widget.options[index].toUpperCase(),
                                 style: TextStyle(
-                                  color: Colors.white
+                                  color: Color(0xffff5b00)
                                 ),
                               ),
                             );

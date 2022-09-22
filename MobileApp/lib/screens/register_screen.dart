@@ -141,6 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 30),
       child: CustomBtn(
+        mainBtn: true,
         enable: true,
         onTap: () {},
         text: "Register",

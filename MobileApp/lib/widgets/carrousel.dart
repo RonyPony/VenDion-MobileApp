@@ -32,28 +32,26 @@ class Carrousel extends StatelessWidget {
         width: 300,
         child: Stack(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: photo),
+            ClipRRect(borderRadius: BorderRadius.circular(20), child: photo),
             Padding(
               padding: const EdgeInsets.only(top: 140),
               child: descri.length > 44
                   ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.only(
-                            left: 10, right: 10, top: 5, bottom: 5),
-                        decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(.5),
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Text(
-                          descri,
-                          style: TextStyle(color: Colors.black),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.only(
+                              left: 10, right: 10, top: 5, bottom: 5),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(.5),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Text(
+                            descri,
+                            style: TextStyle(color: Colors.black),
+                          ),
                         ),
-                      ),
-                    ],
-                  )
+                      ],
+                    )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -128,10 +126,13 @@ class Carrousel extends StatelessWidget {
                 future: vehiclePhoto,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return LinearProgressIndicator(
-                      color: Color(0xffff5b00),
-                      backgroundColor: Colors.white,
-                    );
+                    return Center(
+                        child: Padding(
+                      padding: EdgeInsets.only(left: 30),
+                      child: CircularProgressIndicator(
+                        color: Color(0xffff5b00),
+                      ),
+                    ));
                   }
                   if (snapshot.hasError) {
                     return Text("Error");

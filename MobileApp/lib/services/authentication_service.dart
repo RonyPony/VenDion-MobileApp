@@ -117,7 +117,13 @@ class AuthenticationService implements AuthContract {
     }
     if (result is UserLoginReponse) {
       if (remember) {
-        getCurrentLoggedUser();
+        // getCurrentLoggedUser();
+        currentUser!.id=result.id;
+        currentUser!.firstName = result.name;
+        currentUser!.lastName = result.lastName;
+        currentUser!.birthDate = result.bornDate;
+        currentUser!.email = result.email;
+        
         final jsonData = jsonEncode(currentUser!.toJson());
         sharedPreferences.setString(SAVED_USER_KEY!, jsonData);
       } else {

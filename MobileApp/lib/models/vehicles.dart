@@ -15,6 +15,7 @@ class Vehicle {
   String? year;
   String? vim;
   String? condition;
+  bool? isFavorite;
 
   Vehicle(
       {this.id,
@@ -31,6 +32,7 @@ class Vehicle {
       this.brand,
       this.model,
       this.year,
+      this.isFavorite,
       this.vim,
       this.condition});
 

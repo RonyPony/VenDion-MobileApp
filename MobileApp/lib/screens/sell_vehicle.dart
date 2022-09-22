@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../widgets/drawer.dart';
+import '../widgets/main_button_widget.dart';
+import 'home_screen.dart';
 import 'notifications_screen.dart';
 
 class SellScreen extends StatefulWidget {
@@ -18,7 +20,7 @@ class _buildState extends State<SellScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      drawer: GeneralDrawer(),
+      // drawer: GeneralDrawer(),
       appBar: AppBar(
         toolbarHeight: MediaQuery.of(context).size.height * .1,
         backgroundColor: Colors.white,
@@ -64,7 +66,9 @@ class _buildState extends State<SellScreen> {
             _buildLabel("Description"),
             _splitter(.01),
             _buildDesription(),
-            _buildUploadPhotos()
+            _buildUploadPhotos(),
+            _buildSellBtn(),
+            _buildGoBackBtn()
           ],
         ),
       ),
@@ -560,6 +564,39 @@ class _buildState extends State<SellScreen> {
           ),
         ),
       ],
+    );
+  }
+  
+  _buildGoBackBtn() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: CustomBtn(
+        mainBtn: false,
+        onTap: () {
+          Navigator.pushNamedAndRemoveUntil(
+              context, HomeScreen.routeName, (route) => false);
+        },
+        enable: true,
+        text: "Regresar",
+      ),
+    );
+  }
+  
+  _buildSellBtn() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 30),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pushNamedAndRemoveUntil(
+              context, HomeScreen.routeName, (route) => false);
+        },
+        child: CustomBtn(
+          mainBtn: true,
+          onTap: () {},
+          enable: true,
+          text: "Sell it now!",
+        ),
+      ),
     );
   }
 }

@@ -4,8 +4,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/cli_commands.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/models/user_response.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/models/vehicles.dart';
+import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
 
 import '../widgets/main_button_widget.dart';
@@ -22,16 +24,19 @@ class VehicleDetails extends StatefulWidget {
 class _VehicleDetailsState extends State<VehicleDetails> {
   Vehicle _carInfo = Vehicle();
   String currentPhotoFromGallery = "";
+  bool isFavorite = false;
+  
+  bool addingToFavorite = false;
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments! as Vehicle;
 
     _carInfo = args;
     final provider = Provider.of<VehiclesProvider>(context, listen: false);
+
     Future<VehiclePhoto> _carPhoto = provider.getVechiclePhoto(_carInfo.id!);
     Future<List<VehiclePhoto>> _carGallery =
         provider.getVechicleGallery(_carInfo.id!);
-
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -48,7 +53,24 @@ class _VehicleDetailsState extends State<VehicleDetails> {
             _buildDescription(),
             _buildFeatures(),
             _buildOptions(),
-            _buildAdd2FavBtn(),
+            FutureBuilder<Widget>(
+              future: _buildAdd2FavBtn(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator(
+                    color: Color(0xffff5b00),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return Text("Error occur");
+                }
+
+                if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+                  return snapshot.data!;
+                }
+                return Text("no data");
+              },
+            ),
             _buildBuyNowBtn(),
             SizedBox(
               height: 40,
@@ -96,22 +118,23 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                         padding: const EdgeInsets.all(9),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: 
-                          currentPhotoFromGallery == ""?
-                            Container(
-                              width: MediaQuery.of(context).size.width*.95,
-                              height: MediaQuery.of(context).size.width*.80,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  fit: BoxFit.fill,
-                                  image: Image.memory(
-                                          base64Decode(snapshot.data!.image!))
-                                      .image
-                                ),
-                              ),
-                            ):
-                          Container(
-                                  width: MediaQuery.of(context).size.width*.95,
+                          child: currentPhotoFromGallery == ""
+                              ? Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * .95,
+                                  height:
+                                      MediaQuery.of(context).size.width * .80,
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                        fit: BoxFit.fill,
+                                        image: Image.memory(base64Decode(
+                                                snapshot.data!.image!))
+                                            .image),
+                                  ),
+                                )
+                              : Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * .95,
                                   height: 300,
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
@@ -163,21 +186,28 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                             scrollDirection: Axis.horizontal,
                             itemCount: snapshot.data!.length,
                             itemBuilder: (context, index) {
-                              return snapshot.data!.length>=2?Container(
-                                padding: EdgeInsets.only(right: 10),
-                                decoration: BoxDecoration(),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      currentPhotoFromGallery = snapshot.data![index].image!;
-                                    });
-                                  },
-                                  child: Container(
-                                    height: MediaQuery.of(context).size.height / 10,
-                                    child: Image.memory(base64Decode(snapshot.data![index].image!)),
-                                  ),
-                                ),
-                              ):SizedBox();
+                              return snapshot.data!.length >= 2
+                                  ? Container(
+                                      padding: EdgeInsets.only(right: 10),
+                                      decoration: BoxDecoration(),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            currentPhotoFromGallery =
+                                                snapshot.data![index].image!;
+                                          });
+                                        },
+                                        child: Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height /
+                                              10,
+                                          child: Image.memory(base64Decode(
+                                              snapshot.data![index].image!)),
+                                        ),
+                                      ),
+                                    )
+                                  : SizedBox();
                             },
                           ),
                         );
@@ -471,6 +501,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
               context, HomeScreen.routeName, (route) => false);
         },
         child: CustomBtn(
+          mainBtn: true,
           onTap: () {},
           enable: true,
           text: "Buy Now",
@@ -479,11 +510,32 @@ class _VehicleDetailsState extends State<VehicleDetails> {
     );
   }
 
-  _buildAdd2FavBtn() {
-    return Padding(
+  Future<Widget>_buildAdd2FavBtn() async {
+    final prov = Provider.of<VehiclesProvider>(context, listen: false);
+    final authProvider =
+        Provider.of<AuthenticationProvider>(context, listen: false);
+    UserResponse usr = await authProvider.getCurrentUser();
+    bool isFavorite = await prov.isFavorite(_carInfo.id!,usr.id!);
+
+
+    return !isFavorite?Padding(
       padding: const EdgeInsets.only(top: 20),
       child: GestureDetector(
-        onTap: () {},
+        onTap: () async {
+         
+          setState(() {
+             addingToFavorite=true;
+          });
+          final authProv =
+              Provider.of<AuthenticationProvider>(context, listen: false);
+          UserResponse usr = await authProv.getCurrentUser();
+          // prov.addToFavorite(_carInfo.id!, usr.id!);
+          Future.delayed(Duration(seconds: 2),(){
+           setState(() {}); 
+          });
+          prov.addToFavorite(_carInfo.id!, usr.id!);
+          
+        },
         child: Container(
           width: MediaQuery.of(context).size.width * .8,
           height: 64,
@@ -494,10 +546,10 @@ class _VehicleDetailsState extends State<VehicleDetails> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Add To Favorites",
+              Text(!addingToFavorite?
+                "Add To Favorites":"Updating...",
                 style: TextStyle(
-                  color: Color(0xffff5b00),
+                  color: !addingToFavorite?Color(0xffff5b00):Color(0xffff5b00).withOpacity(.5),
                   fontSize: 18,
                   fontFamily: "Poppins",
                   fontWeight: FontWeight.w600,
@@ -507,6 +559,48 @@ class _VehicleDetailsState extends State<VehicleDetails> {
           ),
         ),
       ),
-    );
+    )
+    :
+    Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: GestureDetector(
+              onTap: () async {
+                setState(() {
+                  addingToFavorite = false;
+                });
+                final authProv =
+                    Provider.of<AuthenticationProvider>(context, listen: false);
+                UserResponse usr = await authProv.getCurrentUser();
+                // prov.addToFavorite(_carInfo.id!, usr.id!);
+                Future.delayed(Duration(seconds: 1), () {
+                  setState(() {});
+                });
+                bool x = await prov.removeFromFavorite(_carInfo.id!, usr.id!);
+                print(x);
+              },
+              child: Container(
+                width: MediaQuery.of(context).size.width * .8,
+                height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Color(0xffff5b00),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Remove from Favorites",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontFamily: "Poppins",
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
   }
 }

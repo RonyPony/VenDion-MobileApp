@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/cli_commands.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/models/user_response.dart';
 import 'package:vendion/models/vehicle_photo.dart';
+import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/screens/car_details_screen.dart';
 import 'package:vendion/screens/filters_screen.dart';
@@ -73,8 +75,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildSearchSection(),
                   _buildCarrouser(),
-                  _buildRecommendedSection(
+                  FutureBuilder<Widget>(
+                    future: _buildRecommendedSection(
                       MediaQuery.of(context).size.width * .30),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Text("Error ");
+                        }
+
+                        if (!snapshot.hasData) {
+                          return Text("No data found");
+                        }
+
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        }
+
+                        if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+                          return snapshot.data!;
+                        }
+                        return Text("no data");
+                      },
+                  ),
                   SizedBox(
                     height: MediaQuery.of(context).size.height * .15,
                   )
@@ -88,11 +110,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
   }
 
-  _buildRecommendedSection(double ancho) {
+  Future<Widget>_buildRecommendedSection(double ancho) async {
     final vehicleProvider =
         Provider.of<VehiclesProvider>(context, listen: false);
+    final authProv = Provider.of<AuthenticationProvider>(context,listen: false);
+    UserResponse usr = await authProv.getCurrentUser();
     Future<List<Vehicle>> _allVehicles =
-        vehicleProvider.getAllAvailableVehicles();
+        vehicleProvider.getAllAvailableVehicles(usr.id!);
 
     return Padding(
       padding: const EdgeInsets.only(left: 8, right: 8, top: 20),
@@ -268,6 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
               context, HomeScreen.routeName, (route) => false);
         },
         child: CustomBtn(
+          mainBtn: true,
           enable: !isSearchingLoading,
           loadingText: "Searching...",
           onTap: () {
@@ -310,12 +335,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _buildaRecommended(Vehicle vehicle, VehiclesProvider provider) {
     bool hasVideo = true;
-    bool liked = true;
+    bool liked = vehicle.isFavorite!;
     Future<VehiclePhoto> _carPhoto = provider.getVechiclePhoto(vehicle.id!);
 
     return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: MediaQuery.of(context).size.width * .1),
+      padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * .04,right: MediaQuery.of(context).size.width * .04),
       // color: Colors.red.withOpacity(.5),
       child: GestureDetector(
         onTap: () {
@@ -378,8 +402,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? Padding(
                               padding: EdgeInsets.only(
                                   top: 10,
-                                  left: MediaQuery.of(context).size.width *
-                                      .65),
+                                  left: MediaQuery.of(context).size.width * .75),
                               child: GestureDetector(
                                   onTap: () {
                                     print("Liked ${vehicle.name}");
@@ -389,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             )
                           : Padding(
                               padding:
-                                  const EdgeInsets.only(top: 10, left: 150),
+                                   EdgeInsets.only(top: 10, left: MediaQuery.of(context).size.width * .75),
                               child: SvgPicture.asset(
                                 "assets/notliked.svg",
                                 width: 26,

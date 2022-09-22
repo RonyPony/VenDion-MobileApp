@@ -154,6 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 30),
       child: CustomBtn(
+        mainBtn: true,
         enable:!_loading,
         loadingText: "Validando...",
         onTap:() async {
