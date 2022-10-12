@@ -1,5 +1,13 @@
+import 'dart:convert';
+import 'dart:ffi';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
+import 'package:vendion/models/register_car.dart';
+import 'package:vendion/models/vehicles.dart';
+import 'package:vendion/providers/vehicles_provider.dart';
 
 import '../widgets/drawer.dart';
 import '../widgets/main_button_widget.dart';
@@ -15,7 +23,29 @@ class SellScreen extends StatefulWidget {
 
 class _buildState extends State<SellScreen> {
   int? _condition = 0;
-  List<String> tags = ["Alarm", "Bluetooth","Cruise Control","Front Parking Sensor"];
+  List<String> tags = [
+    "Alarm",
+    "Bluetooth",
+    "Cruise Control",
+    "Front Parking Sensor",
+    "Digital Dashboard",
+    "Leather seats",
+  ];
+
+  TextEditingController titleController = TextEditingController();
+  bool isNew = true;
+  TextEditingController yearController = TextEditingController();
+
+  TextEditingController locationController = TextEditingController();
+  TextEditingController priceController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController featuresController = TextEditingController();
+
+  bool isTagSearching = false;
+
+  List<String> filteredTags = [];
+
+  List<String> selectedTags = [];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,20 +80,21 @@ class _buildState extends State<SellScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildLabel("Title"),
+            _buildLabel("Titulo"),
             _splitter(.01),
             _buildTitle(),
             _splitter(.02),
             _buildConditionAndYear(),
             _splitter(.02),
             _buildLabel("Features"),
+            _buildSelectedTags(),
             _splitter(.01),
             _buildSearch(),
             _buildTags(),
             _splitter(.01),
             _buildLocationAndPrice(),
             _splitter(.02),
-            _buildLabel("Description"),
+            _buildLabel("Descripcion"),
             _splitter(.01),
             _buildDesription(),
             _buildUploadPhotos(),
@@ -96,10 +127,11 @@ class _buildState extends State<SellScreen> {
                       height: 55,
                       width: MediaQuery.of(context).size.width - 100,
                       child: TextField(
+                        controller: titleController,
                         // cursorHeight: 30,
                         cursorColor: Color(0xffff5b00),
                         decoration: InputDecoration(
-                          hintText: "Enter title",
+                          hintText: "Agrega el titulo",
                           border: OutlineInputBorder(
                               borderSide: BorderSide.none,
                               borderRadius: BorderRadius.circular(20)),
@@ -148,7 +180,7 @@ class _buildState extends State<SellScreen> {
           width: MediaQuery.of(context).size.width / 2,
           child: Column(
             children: [
-              _buildLabel("Condition"),
+              _buildLabel("Condicion"),
               _buildCondition(),
             ],
           ),
@@ -156,7 +188,7 @@ class _buildState extends State<SellScreen> {
         Container(
           width: MediaQuery.of(context).size.width / 2,
           child: Column(
-            children: [_buildLabel("Year"), _buildYearField()],
+            children: [_buildLabel("Año"), _buildYearField()],
           ),
         )
       ],
@@ -175,28 +207,32 @@ class _buildState extends State<SellScreen> {
         child: Row(
           children: [
             Radio(
-              value: _condition!,
-              groupValue: 0,
+              value: 1,
+              activeColor: Color(0xffff5b00),
+              groupValue: _condition,
               onChanged: (int? value) {
                 _condition = value;
+                isNew = true;
                 print(_condition);
                 setState(() {});
               },
             ),
-            Text("New"),
+            Text("Nuevo"),
             SizedBox(
-              width: 10,
+              width: 0,
             ),
             Radio(
-              value: _condition!,
-              groupValue: 1,
+              value: 0,
+              activeColor: Color(0xffff5b00),
+              groupValue: _condition,
               onChanged: (int? value) {
                 _condition = value;
+                isNew = false;
                 print(_condition);
                 setState(() {});
               },
             ),
-            Text("Used"),
+            Text("Usado"),
           ],
         ));
   }
@@ -229,9 +265,11 @@ class _buildState extends State<SellScreen> {
                     width: 130,
                     child: TextField(
                       // cursorHeight: 30,
+                      keyboardType: TextInputType.number,
+                      controller: yearController,
                       cursorColor: Color(0xffff5b00),
                       decoration: InputDecoration(
-                        hintText: "Enter title",
+                        hintText: "Agrega el Año",
                         border: OutlineInputBorder(
                             borderSide: BorderSide.none,
                             borderRadius: BorderRadius.circular(20)),
@@ -276,10 +314,25 @@ class _buildState extends State<SellScreen> {
                       height: 55,
                       width: MediaQuery.of(context).size.width - 100,
                       child: TextField(
+                        controller: featuresController,
+                        autofillHints: tags,
+                        autocorrect: true,
+                        onChanged: (val) {
+                          isTagSearching = true;
+                          filteredTags = tags
+                              .where((element) => element
+                                  .toLowerCase()
+                                  .contains(val.toLowerCase()))
+                              .toList();
+                          print(tags.where((element) => element
+                              .toLowerCase()
+                              .contains(val.toLowerCase())));
+                          setState(() {});
+                        },
                         // cursorHeight: 30,
                         cursorColor: Color(0xffff5b00),
                         decoration: InputDecoration(
-                          hintText: "Search",
+                          hintText: "Buscar",
                           border: OutlineInputBorder(
                               borderSide: BorderSide.none,
                               borderRadius: BorderRadius.circular(20)),
@@ -303,28 +356,147 @@ class _buildState extends State<SellScreen> {
   }
 
   _buildTags() {
+    if (isTagSearching && filteredTags.length <= 0) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: GestureDetector(
+          onTap: () {
+            
+
+            if (!selectedTags.contains(featuresController.text)) {
+              selectedTags.add(featuresController.text);
+              featuresController.text = "";
+              isTagSearching = false;
+              setState(() {});
+            }else{
+              showCupertinoDialog(
+                  context: context,
+                  builder: (context) {
+                    return CupertinoAlertDialog(
+                        title: Text("Ya fue seleccionado"),
+                        content: Text(
+                            "Este Feature ya esta agregado, selecciona otro"),
+                        actions: [
+                          CupertinoDialogAction(
+                            child: Text("Entendido"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          )
+                        ]);
+                  },
+                  barrierDismissible: true);
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+                color: Color(0xffff5b00),
+                borderRadius: BorderRadius.circular(5)),
+            child: Text(
+              "Agregar " + featuresController.text,
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      );
+    }
     return Container(
       height: 100,
       width: MediaQuery.of(context).size.width,
-      child: ListView.builder(
-        scrollDirection: Axis.vertical,
-        itemCount: tags.length,
-        itemBuilder: (context, index) {
-          return Chip(
-            label: Text(tags[index]),
-            backgroundColor: Colors.white,
-            onDeleted: () {
-              setState(() {
-                tags.remove(tags[index]);
-              });
-            },
-            avatar: Icon(
-              Icons.local_offer,
-              color: Color(0xffff5b00),
+      child: !isTagSearching
+          ? ListView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: tags.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    if (!selectedTags.contains(tags[index])) {
+                      selectedTags.add(tags[index]);
+                      print(tags[index]);
+                      setState(() {});
+                    } else {
+                      showCupertinoDialog(
+                          context: context,
+                          builder: (context) {
+                            return CupertinoAlertDialog(
+                                title: Text("Ya fue seleccionado"),
+                                content: Text(
+                                    "Este Feature ya esta agregado, selecciona otro"),
+                                actions: [
+                                  CupertinoDialogAction(
+                                    child: Text("Entendido"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  )
+                                ]);
+                          },
+                          barrierDismissible: true);
+                    }
+                  },
+                  child: Chip(
+                    label: Text(tags[index]),
+                    backgroundColor: Colors.white,
+                    onDeleted: () {
+                      setState(() {
+                        tags.remove(tags[index]);
+                      });
+                    },
+                    avatar: Icon(
+                      Icons.local_offer,
+                      color: Color(0xffff5b00),
+                    ),
+                  ),
+                );
+              },
+            )
+          : ListView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: filteredTags.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    if (!selectedTags.contains(filteredTags[index])) {
+                      selectedTags.add(filteredTags[index]);
+                      print(filteredTags[index]);
+                      setState(() {});
+                    }else{
+                      showCupertinoDialog(
+                          context: context,
+                          builder: (context) {
+                            return CupertinoAlertDialog(
+                                title: Text("Ya fue seleccionado"),
+                                content: Text(
+                                    "Este Feature ya esta agregado, selecciona otro"),
+                                actions: [
+                                  CupertinoDialogAction(
+                                    child: Text("Entendido"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  )
+                                ]);
+                          },
+                          barrierDismissible: true);
+                    }
+                  },
+                  child: Chip(
+                    label: Text(filteredTags[index]),
+                    backgroundColor: Colors.white,
+                    onDeleted: () {
+                      setState(() {
+                        tags.remove(filteredTags[index]);
+                      });
+                    },
+                    avatar: Icon(
+                      Icons.local_offer,
+                      color: Color(0xffff5b00),
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
     // return Column(
     //   children: [
@@ -377,7 +549,7 @@ class _buildState extends State<SellScreen> {
         // ),
         label: Text(s));
   }
-  
+
   _buildLocationAndPrice() {
     return Row(
       children: [
@@ -385,7 +557,7 @@ class _buildState extends State<SellScreen> {
           width: MediaQuery.of(context).size.width / 2,
           child: Column(
             children: [
-              _buildLabel("Location"),
+              _buildLabel("Ubicacion"),
               _buildLocationField(),
             ],
           ),
@@ -393,16 +565,13 @@ class _buildState extends State<SellScreen> {
         Container(
           width: MediaQuery.of(context).size.width / 2,
           child: Column(
-            children: [
-              _buildLabel("Price"), 
-              _buildPriceField()
-              ],
+            children: [_buildLabel("Precio"), _buildPriceField()],
           ),
         )
       ],
     );
   }
-  
+
   _buildLocationField() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -433,7 +602,7 @@ class _buildState extends State<SellScreen> {
                       // cursorHeight: 30,
                       cursorColor: Color(0xffff5b00),
                       decoration: InputDecoration(
-                        hintText: "Location",
+                        hintText: "Locacion",
                         border: OutlineInputBorder(
                             borderSide: BorderSide.none,
                             borderRadius: BorderRadius.circular(20)),
@@ -456,7 +625,7 @@ class _buildState extends State<SellScreen> {
       ],
     );
   }
-  
+
   _buildPriceField() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -485,9 +654,11 @@ class _buildState extends State<SellScreen> {
                     width: 130,
                     child: TextField(
                       // cursorHeight: 30,
+                      controller: priceController,
+                      keyboardType: TextInputType.number,
                       cursorColor: Color(0xffff5b00),
                       decoration: InputDecoration(
-                        hintText: "Enter price",
+                        hintText: "US:800",
                         border: OutlineInputBorder(
                             borderSide: BorderSide.none,
                             borderRadius: BorderRadius.circular(20)),
@@ -502,7 +673,7 @@ class _buildState extends State<SellScreen> {
       ],
     );
   }
-  
+
   _buildDesription() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -524,20 +695,21 @@ class _buildState extends State<SellScreen> {
                       height: 100,
                       width: MediaQuery.of(context).size.width - 100,
                       child: TextField(
+                        controller: descriptionController,
                         keyboardType: TextInputType.multiline,
                         minLines: 1,
-                        maxLines:
-                            5,
+                        maxLines: 5,
                         // cursorHeight: 30,
                         cursorColor: Color(0xffff5b00),
                         decoration: InputDecoration(
-                          hintText: "Enter Description",
+                          
+                          hintText:
+                              "Agrega la descripcion del vehiculo, incluye detalles generales y condiciones especificas del estado actual del vehiculo.",
                           border: OutlineInputBorder(
                               borderSide: BorderSide.none,
                               borderRadius: BorderRadius.circular(20)),
                         ),
                       ))
-                 
                 ],
               ),
             ),
@@ -546,27 +718,39 @@ class _buildState extends State<SellScreen> {
       ],
     );
   }
-  
+
   _buildUploadPhotos() {
-    return Row(
+    return Column(
       children: [
-        SvgPicture.asset("assets/uploadImage.svg",),
         SizedBox(
-          width: 180,
-          child: Text(
-            "Upload images/Video",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 14,
-              fontFamily: "Poppins",
-              fontWeight: FontWeight.w600,
+          height: 20,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 180,
+              child: Text(
+                "Upload images/Video",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-          ),
+          ],
+        ),
+        Icon(
+          Icons.cloud_upload,
+          size: 85,
+          color: Color(0xffff5b00),
         ),
       ],
     );
   }
-  
+
   _buildGoBackBtn() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
@@ -581,22 +765,79 @@ class _buildState extends State<SellScreen> {
       ),
     );
   }
-  
+
   _buildSellBtn() {
     return Padding(
       padding: const EdgeInsets.only(top: 30),
-      child: GestureDetector(
+      child: CustomBtn(
+        mainBtn: true,
         onTap: () {
-          Navigator.pushNamedAndRemoveUntil(
-              context, HomeScreen.routeName, (route) => false);
+          final vehicleProvider =
+              Provider.of<VehiclesProvider>(context, listen: false);
+          RegisterCar vehicle = RegisterCar(
+            brand: "",
+            contactPhoneNumber: "",
+            createdBy: 0,
+            isOffer: false,
+            model: "",
+            vim: "",
+            modificationDate: DateTime.now().toString(),
+            condition: isNew?"Nuevo":"Usado",
+            description: descriptionController.text,
+            features: selectedTags,
+            isEnabled: true,
+            name: titleController.text,
+            price: int.parse(priceController.text),
+            registerDate: DateTime.now().toString(),
+            year: yearController.text,
+            isPublished: true
+          );
+          var response = vehicleProvider.sellVehicle(vehicle);
         },
-        child: CustomBtn(
-          mainBtn: true,
-          onTap: () {},
-          enable: true,
-          text: "Sell it now!",
-        ),
+        enable: true,
+        text: "Vendelo !!",
       ),
     );
+  }
+
+  Widget _buildSelectedTags() {
+    if (selectedTags.length >= 1) {
+      return Container(
+        padding: EdgeInsets.only(left: 10),
+        height: 30,
+        width: MediaQuery.of(context).size.width,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: selectedTags.length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () {
+                selectedTags.remove(selectedTags[index]);
+                setState(() {});
+              },
+              child: Row(
+                children: [
+                  Container(
+                      padding: EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Color(0xffff5b00),
+                      ),
+                      child: Text(
+                        selectedTags[index],
+                        style: TextStyle(color: Colors.white),
+                      )),
+                  SizedBox(
+                    width: 10,
+                  )
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      return SizedBox();
+    }
   }
 }

@@ -8,6 +8,7 @@ import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/models/vehicles.dart';
 
 import '../helpers/network_util.dart';
+import '../models/register_car.dart';
 
 class VehicleService implements VehiclesContract {
   final client = NetworkUtil.getClient();
@@ -290,6 +291,36 @@ class VehicleService implements VehiclesContract {
     } catch (e) {
       print(e);
       return dataResponse!;
+    }
+  }
+  
+  @override
+  Future<bool> sellVehicle(RegisterCar vehicle) async {
+   Response? response;
+    bool dataResponse;
+    var jsonedData = vehicle.toJson();
+    try {
+      response = await client.post('api/vehicle',data: 
+        jsonedData
+      );
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        if (response.statusCode == 404) {
+          return false;
+        } else {
+          return false;
+        }
+      }
+    } on DioError catch (e) {
+      if (e.response!.statusCode == 400) {
+        return false;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print(e);
+      return false;
     }
   }
 }

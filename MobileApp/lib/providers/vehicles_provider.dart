@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vendion/contracts/vehicles_contract.dart';
 import 'package:vendion/models/favorites.dart';
+import 'package:vendion/models/register_car.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 
 import '../models/vehicles.dart';
@@ -52,5 +53,10 @@ class VehiclesProvider with ChangeNotifier {
   Future<bool> isFavorite(int carId, int userId) async {
     final result = await _vehiclesContract.isFavorite(carId, userId);
     return result;
+  }
+
+  Future<bool> sellVehicle(RegisterCar vehicle) async {
+    final response = await _vehiclesContract.sellVehicle(vehicle);
+    return response;
   }
 }
