@@ -103,9 +103,17 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                   // );
                 }
                 if (snapshot.hasError) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Text("Error Getting Vehicle photo")],
+                  return Padding(
+                    padding:  EdgeInsets.only(left: MediaQuery.of(context).size.width*.2),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          "assets/placeholder.png",
+                          scale: 2,
+                        ),
+                      ],
+                    ),
                   );
                 }
 

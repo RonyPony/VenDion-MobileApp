@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_picker/Picker.dart';
 import 'package:vendion/models/brands.dart';
 
+import '../models/serverResponse.dart';
 import '../widgets/customPicker.dart';
 import '../widgets/customRangeSelector.dart';
 import '../widgets/textBox_widget.dart';
@@ -24,7 +25,7 @@ class _StateFilterScreen extends State<FiltersScreen> {
 
   List<String> _carBrandsName = ["Todas"];
   List<String> _carModelName = ["Todos"];
-  late Future<List<Brands>> brands;
+  late Future<List<Brand>> brands;
   int selectedbrandId = 0;
   @override
   void initState() {
@@ -192,7 +193,7 @@ class _StateFilterScreen extends State<FiltersScreen> {
   }
 
   _buildBrandModelSelectors(BuildContext ct) {
-    return FutureBuilder<List<Brands>>(
+    return FutureBuilder<List<Brand>>(
       future: brands,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -205,7 +206,7 @@ class _StateFilterScreen extends State<FiltersScreen> {
             snapshot.connectionState == ConnectionState.done) {
           snapshot.data!.forEach(
             (element) {
-              _carBrandsName.add(element.name!);
+              _carBrandsName.add(element!.makeName!);
             },
           );
           return Row(
@@ -243,22 +244,26 @@ class _StateFilterScreen extends State<FiltersScreen> {
     );
   }
 
-  Future<List<Brands>> getBrands() async {
-    List<Brands> marcas = [];
+  Future<List<Brand>> getBrands() async {
+    List<Brand> marcas = [];  
     try {
       var response = await Dio().get(
-          'https://private-anon-d54d1424fc-carsapi1.apiary-mock.com/manufacturers');
+          'https://vpic.nhtsa.dot.gov/api/vehicles/getallmakes?format=json');
       print(response);
-      var list = response.data;
-      marcas = list
-          .map<Brands>((brand) => Brands(
-              name: brand["name"],
-              avgHorsepower: brand["avg_horsepower"],
-              avgPrice: brand["avg_price"],
-              imgUrl: brand["img_url"],
-              maxCarId: brand["max_car_id"],
-              numModels: brand["num_models"]))
-          .toList();
+      List x = response.data["Results"].map((model) => Brand.fromJson(model));
+      print(x);
+      //TODO not tested yet
+      // marcas = x.map<Brand>(b)=>Brand().toList();
+      // marcas = list.map<Brands>((brand) => Brands(
+      //         // name: brand["name"],
+      //         // avgHorsepower: brand["avg_horsepower"],
+      //         // avgPrice: brand["avg_price"],
+      //         // imgUrl: brand["img_url"],
+      //         // maxCarId: brand["max_car_id"],
+      //         // numModels: brand["num_models"]
+              
+      //         ))
+      //     .toList();
       print(marcas);
       return marcas;
     } catch (e) {

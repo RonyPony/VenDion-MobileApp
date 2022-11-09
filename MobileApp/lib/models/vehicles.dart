@@ -7,6 +7,7 @@ class Vehicle {
   int? price;
   String? contactPhoneNumber;
   String? name;
+  bool? isOffer;
   String? description;
   String? registerDate;
   String? modificationDate;
@@ -28,6 +29,7 @@ class Vehicle {
       this.name,
       this.description,
       this.registerDate,
+      this.isOffer,
       this.modificationDate,
       this.brand,
       this.model,
@@ -47,6 +49,7 @@ class Vehicle {
     name = json['name'];
     description = json['description'];
     registerDate = json['registerDate'];
+    isOffer =json['isOffer'];
     modificationDate = json['modificationDate'];
     brand = json['brand'];
     model = json['model'];
@@ -69,6 +72,7 @@ class Vehicle {
     data['registerDate'] = this.registerDate;
     data['modificationDate'] = this.modificationDate;
     data['brand'] = this.brand;
+    data['isOffer'] = this.isOffer;
     data['model'] = this.model;
     data['year'] = this.year;
     data['vim'] = this.vim;

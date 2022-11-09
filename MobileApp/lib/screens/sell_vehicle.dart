@@ -46,6 +46,8 @@ class _buildState extends State<SellScreen> {
   List<String> filteredTags = [];
 
   List<String> selectedTags = [];
+  
+  bool posting = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -753,7 +755,7 @@ class _buildState extends State<SellScreen> {
 
   _buildGoBackBtn() {
     return Padding(
-      padding: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.only(top: 10,bottom: 50),
       child: CustomBtn(
         mainBtn: false,
         onTap: () {
@@ -771,7 +773,7 @@ class _buildState extends State<SellScreen> {
       padding: const EdgeInsets.only(top: 30),
       child: CustomBtn(
         mainBtn: true,
-        onTap: () {
+        onTap: () async {
           final vehicleProvider =
               Provider.of<VehiclesProvider>(context, listen: false);
           RegisterCar vehicle = RegisterCar(
@@ -792,10 +794,33 @@ class _buildState extends State<SellScreen> {
             year: yearController.text,
             isPublished: true
           );
-          var response = vehicleProvider.sellVehicle(vehicle);
+          setState(() {
+            posting=true;
+          });
+          bool response = await vehicleProvider.sellVehicle(vehicle);
+          if(response){
+            setState(() {
+              posting = true;
+            });
+          }else{
+            setState(() {
+              posting = false;
+            });
+            FocusScopeNode currentFocus = FocusScope.of(context);
+            if (!currentFocus.hasPrimaryFocus) {
+              currentFocus.unfocus();
+            }
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              duration: Duration(seconds: 10),
+              // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+              content: Text("Ups, no pudimos publicar este vehiculo, intenta mas tarde"),
+            ));
+            //TODO what to do if fails???
+          }
         },
-        enable: true,
-        text: "Vendelo !!",
+        enable: !posting,
+        loadingText: "Publicando...",
+        text: "Vendelo",
       ),
     );
   }

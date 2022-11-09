@@ -157,34 +157,39 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           FutureBuilder<List<Vehicle>>(
             future: _allVehicles,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+            builder: (context, vehicleListSnapshot) {
+              if (vehicleListSnapshot.connectionState == ConnectionState.waiting) {
                 return CircularProgressIndicator(color: Color(0xffff5b00));
               }
-              if (snapshot.hasError) {
+              if (vehicleListSnapshot.hasError) {
                 return Text("Error");
               }
-              if (snapshot.hasData &&
-                  snapshot.connectionState == ConnectionState.done) {
+              if (vehicleListSnapshot.hasData &&
+                  vehicleListSnapshot.connectionState == ConnectionState.done) {
                 // return Text(snapshot.data![0].name!);
-                return Container(
-                  // color: Colors.red,
-                  // padding: EdgeInsets.only(bottom: 50),
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                  child: ListView.builder(
-                    // shrinkWrap: true,
-                    // physics: const ClampingScrollPhysics(),
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      Vehicle project = snapshot.data![index];
-                      return Padding(
+                return ListView.builder(
+                  shrinkWrap: true,
+                  // primary: true,
+                  // physics:  ClampingScrollPhysics(),
+                  physics:  NeverScrollableScrollPhysics(),
+                  itemCount: vehicleListSnapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    Vehicle project = vehicleListSnapshot.data![index];
+                    final authProvider = Provider.of<AuthenticationProvider>(
+                        context,
+                        listen: false);
+                    Future<UserResponse> currentUser =
+                        authProvider.getCurrentUser();
+
+                     if (!project.isOffer!) {
+                        return Padding(
                         padding: const EdgeInsets.only(top: 20),
                         child: _buildaRecommended(project, vehicleProvider),
                       );
-                    },
-                  ),
+                     }else{
+                      return SizedBox();
+                     }
+                  },
                 );
               }
 
@@ -337,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
     bool hasVideo = true;
     bool liked = vehicle.isFavorite!;
     Future<VehiclePhoto> _carPhoto = provider.getVechiclePhoto(vehicle.id!);
-
+    
     return Container(
       padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * .04,right: MediaQuery.of(context).size.width * .04),
       // color: Colors.red.withOpacity(.5),

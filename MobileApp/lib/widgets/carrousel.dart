@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/models/vehicles.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
+import 'package:vendion/screens/car_details_screen.dart';
 
 class Carrousel extends StatelessWidget {
   ScrollController controller = ScrollController();
@@ -139,8 +140,13 @@ class Carrousel extends StatelessWidget {
                   }
                   if (snapshot.hasData &&
                       snapshot.connectionState == ConnectionState.done) {
-                    return _buildAphoto(true, list[index].description!,
-                        Image.memory(base64Decode(snapshot.data!.image!)));
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, VehicleDetails.routeName,arguments: list[index]);
+                      },
+                      child: _buildAphoto(true, list[index].description!,
+                          Image.memory(base64Decode(snapshot.data!.image!))),
+                    );
                   }
 
                   return Text(
