@@ -4,6 +4,8 @@ import 'package:vendion/models/favorites.dart';
 import 'package:vendion/models/register_car.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 
+import '../models/brands.dart';
+import '../models/models.dart';
 import '../models/vehicles.dart';
 
 class VehiclesProvider with ChangeNotifier {
@@ -57,6 +59,15 @@ class VehiclesProvider with ChangeNotifier {
 
   Future<bool> sellVehicle(RegisterCar vehicle) async {
     final response = await _vehiclesContract.sellVehicle(vehicle);
+    return response;
+  }
+  Future<List<Brand>> getBrands() async {
+    final response  = await _vehiclesContract.getBrands();
+    return response;
+  }
+
+  Future<List<Model>> getModels(String brandName) async {
+    final response = await _vehiclesContract.getModels(brandName);
     return response;
   }
 }

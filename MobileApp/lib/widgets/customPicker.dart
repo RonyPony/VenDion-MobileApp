@@ -65,9 +65,12 @@ class _CustomPickerState extends State<CustomPicker> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Text(
-                      widget.placeHolder + " ",
-                      style: const TextStyle(color: Colors.white,fontSize: 18),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text(
+                        widget.placeHolder + " ",
+                        style: const TextStyle(color: Colors.white,fontSize: 18,fontWeight: FontWeight.bold),
+                      ),
                     ),
                     CupertinoButton(
                       padding: EdgeInsets.zero,
@@ -80,7 +83,7 @@ class _CustomPickerState extends State<CustomPicker> {
                           // useMagnifier: true,
                           itemExtent: _kItemExtent,
   
-                          // looping: true,
+                          looping: false,
                           // This is called when selected item is changed.
                           onSelectedItemChanged: (int selectedItem) {
                             widget.onChange(selectedItem);

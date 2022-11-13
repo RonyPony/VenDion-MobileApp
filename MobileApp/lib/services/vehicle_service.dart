@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 import 'package:vendion/contracts/vehicles_contract.dart';
+import 'package:vendion/models/brands.dart';
 import 'package:vendion/models/favorites.dart';
+import 'package:vendion/models/models.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/models/vehicles.dart';
 
@@ -303,7 +305,7 @@ class VehicleService implements VehiclesContract {
       response = await client.post('api/vehicle',data: 
         jsonedData
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201 ) {
         return true;
       } else {
         if (response.statusCode == 404) {
@@ -321,6 +323,59 @@ class VehicleService implements VehiclesContract {
     } catch (e) {
       print(e);
       return false;
+    }
+  }
+
+  @override
+  Future<List<Brand>> getBrands() async {
+    List<Brand> marcas = [];
+    try {
+      var response = await Dio().get(
+          'https://vpic.nhtsa.dot.gov/api/vehicles/getallmakes?format=json');
+      print(response);
+      for (Map<String, dynamic> data in response.data["Results"]) {
+        print(data);
+
+        Brand newBrand =
+            Brand(makeID: data["Make_ID"], makeName: data["Make_Name"]);
+
+        marcas.add(newBrand);
+      }
+      //  marcas = response.data["Results"].map((model) => Brand.fromJson(model)).toList();
+
+      print(marcas);
+      return marcas;
+    } on DioError catch (e) {
+      if (e.response!.statusCode == 400) {
+        return marcas;
+      } else {
+        return marcas;
+      }
+    } catch (e) {
+      print(e);
+      return marcas;
+    }
+  }
+
+  @override
+  Future<List<Model>> getModels(String brandName) async {
+    List<Model> models = [];
+    try {
+      var response = await Dio().get(
+          'https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/$brandName?format=json');
+      print(response);
+      for (Map<String, dynamic> data in response.data["Results"]) {
+        print(data);
+        Model newModel = Model.fromJson(data);
+        models.add(newModel);
+      }
+      //  marcas = response.data["Results"].map((model) => Brand.fromJson(model)).toList();
+
+      print(models);
+      return models;
+    } catch (e) {
+      print(e);
+      return models;
     }
   }
 }

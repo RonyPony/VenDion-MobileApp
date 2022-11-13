@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vendion/contracts/vehicles_contract.dart';
 import 'package:vendion/providers/auth_provider.dart';
+import 'package:vendion/providers/photo_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/routes.dart';
 import 'package:vendion/screens/login_screen.dart';
 import 'package:vendion/services/authentication_service.dart';
+import 'package:vendion/services/photo_service.dart';
 import 'package:vendion/services/user_service.dart';
 import 'package:vendion/services/vehicle_service.dart';
 
@@ -28,6 +30,7 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               VehiclesProvider(VehicleService()),
         ),
+        ChangeNotifierProvider(create:(context) => PhotoProvider(PhotoService()),)
       ],
       child: MaterialApp(
         title: 'VenDionApp',

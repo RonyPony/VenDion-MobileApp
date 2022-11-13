@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/Picker.dart';
 import 'package:vendion/models/brands.dart';
+import 'package:vendion/widgets/brandModelSelector.dart';
 
+import '../models/models.dart';
 import '../models/serverResponse.dart';
 import '../widgets/customPicker.dart';
 import '../widgets/customRangeSelector.dart';
@@ -25,8 +27,10 @@ class _StateFilterScreen extends State<FiltersScreen> {
 
   List<String> _carBrandsName = ["Todas"];
   List<String> _carModelName = ["Todos"];
-  late Future<List<Brand>> brands;
+  var brands;
   int selectedbrandId = 0;
+  String selectedBrandName = "";
+  String selectedBrandModel = "";
   @override
   void initState() {
     // TODO: implement initState
@@ -197,7 +201,10 @@ class _StateFilterScreen extends State<FiltersScreen> {
       future: brands,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return LinearProgressIndicator(color: Color(0xffff5b00),backgroundColor: Colors.white,);
+          return LinearProgressIndicator(
+            color: Color(0xffff5b00),
+            backgroundColor: Colors.white,
+          );
         }
         if (snapshot.hasError) {
           return Text("Error");
@@ -209,35 +216,66 @@ class _StateFilterScreen extends State<FiltersScreen> {
               _carBrandsName.add(element!.makeName!);
             },
           );
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CustomPicker(
-                placeHolder: "Marca:",
-                options: _carBrandsName,
-                onChange: (int x) async {
-                  if (kDebugMode) {
-                    selectedbrandId = x;
-                    //print("Selected ${brands[x]}");
-                  }
-                },
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              CustomPicker(
-                placeHolder: "Modelo:",
-                options: _carModelName,
-                onChange: (int x) async {
-                  if (kDebugMode) {
-                    selectedbrandId = x;
+          return BrandModelSelector(
+            selectedBrand: selectedBrandName,
+            selectedModel: selectedBrandModel,
+            brands: _carBrandsName,
+            models: _carModelName
+            );
+          // return Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     CustomPicker(
+          //       placeHolder: "Marca:",
+          //       options: _carBrandsName,
+          //       onChange: (int x) async {
+          //         if (kDebugMode) {
+          //           selectedbrandId = x;
+          //           selectedBrandName = _carBrandsName[x];
+          //           print("Selected ${_carBrandsName[x]}");
+          //         }
+          //       },
+          //     ),
+          //     Padding(
+          //       padding: const EdgeInsets.symmetric(horizontal: 8),
+          //       child: GestureDetector(
+          //         onTap: () async {
+          //           // _carModelName
+          //           if (selectedBrandName!="" && selectedBrandName != "Todas") {
+          //             List<Model> x = await getModels(selectedBrandName);
+          //             _carModelName.clear();
+          //             for (Model modelo in x) {
+          //               _carModelName.add(modelo.modelName!);
+          //             }
+          //             setState(() {});
+          //           }
+          //         },
+          //         child: Container(
+          //           padding: EdgeInsets.all(5),
+          //           child: Icon(Icons.sync_alt,color: Colors.white,),
+          //           decoration: BoxDecoration(
+          //             color: Color(0xffff5b00),
+          //             borderRadius: BorderRadius.circular(10)
+          //           ),
+          //         ),
+          //       ),
+          //     ),
+          //     // SizedBox(
+          //     //   width: 10,
+          //     // ),
+          //     CustomPicker(
+          //       placeHolder: "Modelo:",
+          //       options: _carModelName,
+          //       onChange: (int x) async {
+          //         if (kDebugMode) {
+          //           selectedbrandId = x;
 
-                    // print("Selected ${brands[x]}");
-                  }
-                },
-              )
-            ],
-          );
+          //           // print("Selected ${brands[x]}");
+          //         }
+          //       },
+          //     )
+          //   ],
+          // );
         }
         return Text("Error");
       },
@@ -245,30 +283,48 @@ class _StateFilterScreen extends State<FiltersScreen> {
   }
 
   Future<List<Brand>> getBrands() async {
-    List<Brand> marcas = [];  
+    List<Brand> marcas = [];
     try {
       var response = await Dio().get(
           'https://vpic.nhtsa.dot.gov/api/vehicles/getallmakes?format=json');
       print(response);
-      List x = response.data["Results"].map((model) => Brand.fromJson(model));
-      print(x);
-      //TODO not tested yet
-      // marcas = x.map<Brand>(b)=>Brand().toList();
-      // marcas = list.map<Brands>((brand) => Brands(
-      //         // name: brand["name"],
-      //         // avgHorsepower: brand["avg_horsepower"],
-      //         // avgPrice: brand["avg_price"],
-      //         // imgUrl: brand["img_url"],
-      //         // maxCarId: brand["max_car_id"],
-      //         // numModels: brand["num_models"]
-              
-      //         ))
-      //     .toList();
+      for (Map<String, dynamic> data in response.data["Results"]) {
+        print(data);
+
+        Brand newBrand =
+            Brand(makeID: data["Make_ID"], makeName: data["Make_Name"]);
+
+        marcas.add(newBrand);
+      }
+      //  marcas = response.data["Results"].map((model) => Brand.fromJson(model)).toList();
+
       print(marcas);
       return marcas;
     } catch (e) {
       print(e);
       return marcas;
+    }
+    // _carBrandsName
+  }
+
+  Future<List<Model>> getModels(String makeName) async {
+    List<Model> models = [];
+    try {
+      var response = await Dio().get(
+          'https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/$makeName?format=json');
+      print(response);
+      for (Map<String, dynamic> data in response.data["Results"]) {
+        print(data);
+        Model newModel = Model.fromJson(data);
+        models.add(newModel);
+      }
+      //  marcas = response.data["Results"].map((model) => Brand.fromJson(model)).toList();
+
+      print(models);
+      return models;
+    } catch (e) {
+      print(e);
+      return models;
     }
     // _carBrandsName
   }
@@ -279,41 +335,40 @@ class _StateFilterScreen extends State<FiltersScreen> {
       padding: const EdgeInsets.only(top: 50),
       child: CustomTextBox(
         controller: _controller,
-        onChange: (){
-
-        },
+        onChange: () {},
         text: 'Ubicacion',
-        svg: Icon(Icons.location_on_rounded,color: Color(0xffff5b00) ,),
+        svg: Icon(
+          Icons.location_on_rounded,
+          color: Color(0xffff5b00),
+        ),
       ),
     );
   }
-  
+
   _buildPriceRange() {
     return Padding(
       padding: const EdgeInsets.only(top: 50),
       child: Container(
-      width: 324,
-      child: Column(
+        width: 324,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children:[
-              Text(
-                  "Price Range",
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontFamily: "Poppins",
-                      fontWeight: FontWeight.w600,
-                  ),
+          children: [
+            Text(
+              "Price Range",
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontFamily: "Poppins",
+                fontWeight: FontWeight.w600,
               ),
-              SizedBox(height: 5),
-              
-              CustomRangeSelect(
-                min: 0,
-                max: 60000,
+            ),
+            SizedBox(height: 5),
+            CustomRangeSelect(
+              min: 0,
+              max: 60000,
               onChange: (RangeValues valores) {
-                
                 if (kDebugMode) {
                   print(valores);
                   // print("$minimunAgeToMatch - $maximunAgeToMatch");
@@ -321,45 +376,46 @@ class _StateFilterScreen extends State<FiltersScreen> {
               },
             ),
           ],
+        ),
       ),
-),
     );
   }
-  
+
   _buildApplyButton() {
     return Padding(
       padding: const EdgeInsets.only(top: 50),
       child: GestureDetector(
-        onTap: (){
-
-        },
+        onTap: () {},
         child: SizedBox(
-      width: 174,
-      child: Material(
-          color: Color(0xffff5b00),
-          borderRadius: BorderRadius.circular(10),
-          child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 15, ),
-              child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children:[
-                      Text(
-                          "Apply Filters",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontFamily: "Poppins",
-                              fontWeight: FontWeight.w600,
-                          ),
-                      ),
-                  ],
+          width: 174,
+          child: Material(
+            color: Color(0xffff5b00),
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 1,
+                vertical: 15,
               ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "Apply Filters",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontFamily: "Poppins",
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-      ),
-),
+        ),
       ),
     );
   }

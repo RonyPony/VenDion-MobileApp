@@ -1,14 +1,25 @@
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:vendion/models/register_car.dart';
+import 'package:vendion/models/user_response.dart';
 import 'package:vendion/models/vehicles.dart';
+import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
+import 'package:vendion/widgets/brandModelSelector.dart';
 
+import '../models/brands.dart';
+import '../models/models.dart';
+import '../models/photoUpload.dart';
+import '../providers/photo_provider.dart';
+import '../widgets/customPicker.dart';
 import '../widgets/drawer.dart';
 import '../widgets/main_button_widget.dart';
 import 'home_screen.dart';
@@ -40,14 +51,28 @@ class _buildState extends State<SellScreen> {
   TextEditingController priceController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   TextEditingController featuresController = TextEditingController();
-
+  TextEditingController contactNumber = TextEditingController();
   bool isTagSearching = false;
 
   List<String> filteredTags = [];
 
   List<String> selectedTags = [];
-  
+  List<String> _carBrandsName = ["Todas"];
+  List<String> _carModelName = ["Todos"];
+  var brands;
+  int selectedbrandId = 0;
+  String selectedBrandName = "";
+  String selectedBrandModel = "";
   bool posting = false;
+  List<PhotoToUpload> photoList = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getBrands();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,6 +111,10 @@ class _buildState extends State<SellScreen> {
             _splitter(.01),
             _buildTitle(),
             _splitter(.02),
+            _buildLabel("Marca y Modelo"),
+            _splitter(.01),
+            _buildBrandModel(),
+            _splitter(.02),
             _buildConditionAndYear(),
             _splitter(.02),
             _buildLabel("Features"),
@@ -95,6 +124,10 @@ class _buildState extends State<SellScreen> {
             _buildTags(),
             _splitter(.01),
             _buildLocationAndPrice(),
+            _splitter(.02),
+            _buildLabel("Numero de contacto"),
+            _splitter(.01),
+            _buildNumber(),
             _splitter(.02),
             _buildLabel("Descripcion"),
             _splitter(.01),
@@ -363,14 +396,12 @@ class _buildState extends State<SellScreen> {
         padding: const EdgeInsets.only(top: 10),
         child: GestureDetector(
           onTap: () {
-            
-
             if (!selectedTags.contains(featuresController.text)) {
               selectedTags.add(featuresController.text);
               featuresController.text = "";
               isTagSearching = false;
               setState(() {});
-            }else{
+            } else {
               showCupertinoDialog(
                   context: context,
                   builder: (context) {
@@ -463,7 +494,7 @@ class _buildState extends State<SellScreen> {
                       selectedTags.add(filteredTags[index]);
                       print(filteredTags[index]);
                       setState(() {});
-                    }else{
+                    } else {
                       showCupertinoDialog(
                           context: context,
                           builder: (context) {
@@ -704,7 +735,6 @@ class _buildState extends State<SellScreen> {
                         // cursorHeight: 30,
                         cursorColor: Color(0xffff5b00),
                         decoration: InputDecoration(
-                          
                           hintText:
                               "Agrega la descripcion del vehiculo, incluye detalles generales y condiciones especificas del estado actual del vehiculo.",
                           border: OutlineInputBorder(
@@ -744,10 +774,68 @@ class _buildState extends State<SellScreen> {
             ),
           ],
         ),
-        Icon(
-          Icons.cloud_upload,
-          size: 85,
-          color: Color(0xffff5b00),
+        GestureDetector(
+          onTap: () async {
+            selectNewPic();
+          },
+          child: Column(
+            children: [
+              photoList.length > 0
+                  ? Container(
+                      height: 200,
+                      width: MediaQuery.of(context).size.width,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: photoList.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                photoList.removeAt(index);
+                              });
+                            },
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                      padding: EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                              color: Color(0xffff5b00))),
+                                      child: Image.file(
+                                          File(photoList[index].image!))),
+                                ),
+                                
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : Text("No image selected"),
+              photoList.length == 0
+                  ? Icon(
+                      Icons.cloud_upload,
+                      size: 85,
+                      color: Color(0xffff5b00),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(left: 20),
+                      child: GestureDetector(
+                          onTap: () {
+                            selectNewPic();
+                          },
+                          child: Icon(
+                            Icons.add_a_photo_rounded,
+                            size: 70,
+                            color: Color(0xffff5b00),
+                          )),
+                    )
+            ],
+          ),
         ),
       ],
     );
@@ -755,7 +843,7 @@ class _buildState extends State<SellScreen> {
 
   _buildGoBackBtn() {
     return Padding(
-      padding: const EdgeInsets.only(top: 10,bottom: 50),
+      padding: const EdgeInsets.only(top: 10, bottom: 50),
       child: CustomBtn(
         mainBtn: false,
         onTap: () {
@@ -774,35 +862,50 @@ class _buildState extends State<SellScreen> {
       child: CustomBtn(
         mainBtn: true,
         onTap: () async {
+          if(priceController.text.isEmpty){
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              duration: Duration(seconds: 10),
+              // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+              content: Text(
+                  "El precio que estableciste no es valido, corrigelo"),
+            ));
+                  return;
+          }
           final vehicleProvider =
               Provider.of<VehiclesProvider>(context, listen: false);
+          final authProvider =
+              Provider.of<AuthenticationProvider>(context, listen: false);
+          final photoProvider = Provider.of<PhotoProvider>(context,listen: false);
+          UserResponse currentUser = await authProvider.getCurrentUser();
           RegisterCar vehicle = RegisterCar(
-            brand: "",
-            contactPhoneNumber: "",
-            createdBy: 0,
-            isOffer: false,
-            model: "",
-            vim: "",
-            modificationDate: DateTime.now().toString(),
-            condition: isNew?"Nuevo":"Usado",
-            description: descriptionController.text,
-            features: selectedTags,
-            isEnabled: true,
-            name: titleController.text,
-            price: int.parse(priceController.text),
-            registerDate: DateTime.now().toString(),
-            year: yearController.text,
-            isPublished: true
-          );
+              brand: selectedBrandName,
+              contactPhoneNumber: contactNumber.text,
+              createdBy: currentUser.id,
+              isOffer: false,
+              model: selectedBrandModel,
+              vim: "",
+              modificationDate: DateTime.now().toString(),
+              condition: isNew ? "Nuevo" : "Usado",
+              description: descriptionController.text,
+              features: selectedTags,
+              isEnabled: true,
+              name: titleController.text,
+              price: int.parse(priceController.text),
+              registerDate: DateTime.now().toString(),
+              year: yearController.text,
+              isPublished: true);
           setState(() {
-            posting=true;
+            posting = true;
           });
+          for (PhotoToUpload photo in photoList) {
+            bool uploaded = await photoProvider.uploadPhoto(photo);
+          }
           bool response = await vehicleProvider.sellVehicle(vehicle);
-          if(response){
+          if (response) {
             setState(() {
-              posting = true;
+              posting = false;
             });
-          }else{
+          } else {
             setState(() {
               posting = false;
             });
@@ -813,7 +916,8 @@ class _buildState extends State<SellScreen> {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               duration: Duration(seconds: 10),
               // backgroundColor: Color(0xffff5b00).withOpacity(.5),
-              content: Text("Ups, no pudimos publicar este vehiculo, intenta mas tarde"),
+              content: Text(
+                  "Ups, no pudimos publicar este vehiculo, intenta mas tarde"),
             ));
             //TODO what to do if fails???
           }
@@ -864,5 +968,214 @@ class _buildState extends State<SellScreen> {
     } else {
       return SizedBox();
     }
+  }
+
+  Future<List<Brand>> getBrands() async {
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    List<Brand> response = await vehicleProvider.getBrands();
+    _carBrandsName.clear();
+    for (Brand brand in response) {
+      _carBrandsName.add(brand.makeName!);
+    }
+    return response;
+  }
+
+  _buildBrandModel() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: CustomPicker(
+              placeHolder: "Marca:",
+              options: _carBrandsName,
+              onChange: (int x) async {
+                selectedbrandId = x;
+                selectedBrandName = _carBrandsName[x];
+                print("Selected ${_carBrandsName[x]}");
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: GestureDetector(
+              onTap: () async {
+                // _carModelName
+                final vehicleProvider =
+                    Provider.of<VehiclesProvider>(context, listen: false);
+                if (selectedBrandName != "" && selectedBrandName != "Todas") {
+                  List<Model> x =
+                      await vehicleProvider.getModels(selectedBrandName);
+                  if (x.length > 0) {
+                    _carModelName.clear();
+                    for (Model modelo in x) {
+                      _carModelName.add(modelo.modelName!);
+                    }
+
+                    if (_carModelName.length == 1) {
+                      selectedBrandModel = _carBrandsName.first;
+                    }
+                  }
+                  setState(() {});
+                }
+              },
+              child: Container(
+                padding: EdgeInsets.all(5),
+                child: Icon(
+                  Icons.sync_alt,
+                  color: Colors.white,
+                ),
+                decoration: BoxDecoration(
+                    color: Color(0xffff5b00),
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+          // SizedBox(
+          //   width: 10,
+          // ),
+
+          Expanded(
+            child: CustomPicker(
+              placeHolder: "Modelo:",
+              options: _carModelName,
+              onChange: (int x) async {
+                selectedbrandId = x;
+                selectedBrandModel = _carModelName[x];
+              },
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumber() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width - 50,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Color(0xffedeeef),
+              ),
+              padding: EdgeInsets.only(left: 0, top: 0, bottom: 0, right: 0
+                  // right: MediaQuery.of(context).size.width/3,
+                  ),
+              child: Row(
+                children: [
+                  Container(
+                      height: 55,
+                      width: MediaQuery.of(context).size.width - 100,
+                      child: TextField(
+                        controller: contactNumber,
+                        // cursorHeight: 30,
+                        keyboardType: TextInputType.phone,
+                        cursorColor: Color(0xffff5b00),
+                        decoration: InputDecoration(
+                          hintText: "Agrega el numero",
+                          border: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                              borderRadius: BorderRadius.circular(20)),
+                        ),
+                      ))
+                  // Text(
+                  //   "Enter title",
+                  //   textAlign: TextAlign.center,
+                  //   style: TextStyle(
+                  //     color: Color(0xff8c9199),
+                  //     fontSize: 12,
+                  //   ),
+                  // ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  Future<void> selectNewPic() async {
+    // final XFile? image =
+            //     await _picker.pickImage(
+            //         source: ImageSource.gallery);
+            try {
+              FocusScope.of(context).unfocus();
+              final userProvider =
+                  Provider.of<AuthenticationProvider>(context, listen: false);
+              final photoProvider =
+                  Provider.of<PhotoProvider>(context, listen: false);
+              UserResponse currentUser = await userProvider.getCurrentUser();
+              ImagePicker imagePicker = ImagePicker();
+              final imageFile = await imagePicker.getImage(
+                  source: ImageSource.gallery, imageQuality: 25);
+              // File imagen = File(imageFile!.path);
+              // String fileExt = getFileExtension(imagen.path);
+              // String fileRoute = getFileRoute(imagen.path);
+              // File compressed =await
+              //     photoProvider.compressImage(
+              //         imagen, fileRoute+"2"+fileExt);
+              PhotoToUpload photoToUpload = PhotoToUpload();
+              photoToUpload.image = imageFile!.path;
+              photoToUpload.productId = 0;
+              setState(() {
+                photoList.add(photoToUpload);
+              });
+              // bool uploaded = await photoProvider.uploadPhoto(photoToUpload);
+              // if (uploaded) {
+              //   CupertinoAlertDialog(
+              //       title: Text("Completado"),
+              //       content:
+              //           Text("Se ha completado la carga de la imagen 📷"),
+              //       actions: [
+              //         CupertinoDialogAction(
+              //           child: Text("OK"),
+              //           onPressed: () {
+              //             Navigator.of(context).pop();
+              //           },
+              //         )
+              //       ]);
+              //   // CoolAlert.show(
+              //   //     context: context,
+              //   //     animType: CoolAlertAnimType
+              //   //         .slideInDown,
+              //   //     backgroundColor: Colors.white,
+              //   //     loopAnimation: false,
+              //   //     type: CoolAlertType.success,
+              //   //     title: "Completado",
+              //   //     text:
+              //   //         "Se ha completado la carga de la imagen 📷");
+              // }
+              setState(() {});
+            } catch (e) {
+              CupertinoAlertDialog(
+                  title: Text("Ups!"),
+                  content: Text(e.toString()),
+                  actions: [
+                    CupertinoDialogAction(
+                      child: Text("OK"),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    )
+                  ]);
+              // CoolAlert.show(
+              //     context: context,
+              //     animType: CoolAlertAnimType.slideInDown,
+              //     backgroundColor: Colors.white,
+              //     loopAnimation: false,
+              //     type: CoolAlertType.error,
+              //     title: "Ups!",
+              //     text: e.toString());
+              setState(() {});
+            } finally {
+              setState(() {});
+            }
   }
 }
