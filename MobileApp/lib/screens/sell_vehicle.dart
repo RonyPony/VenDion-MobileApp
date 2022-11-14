@@ -808,7 +808,6 @@ class _buildState extends State<SellScreen> {
                                       child: Image.file(
                                           File(photoList[index].image!))),
                                 ),
-                                
                               ],
                             ),
                           );
@@ -862,64 +861,78 @@ class _buildState extends State<SellScreen> {
       child: CustomBtn(
         mainBtn: true,
         onTap: () async {
-          if(priceController.text.isEmpty){
+          if (checkFieldsValidations()) {
+            final vehicleProvider =
+                Provider.of<VehiclesProvider>(context, listen: false);
+            final authProvider =
+                Provider.of<AuthenticationProvider>(context, listen: false);
+            final photoProvider =
+                Provider.of<PhotoProvider>(context, listen: false);
+            UserResponse currentUser = await authProvider.getCurrentUser();
+            RegisterCar vehicle = RegisterCar(
+                brand: selectedBrandName,
+                contactPhoneNumber: contactNumber.text,
+                createdBy: currentUser.id,
+                isOffer: false,
+                model: selectedBrandModel,
+                vim: "",
+                modificationDate: DateTime.now().toString(),
+                condition: isNew ? "Nuevo" : "Usado",
+                description: descriptionController.text,
+                features: selectedTags,
+                isEnabled: true,
+                name: titleController.text,
+                price: int.parse(priceController.text),
+                registerDate: DateTime.now().toString(),
+                year: yearController.text,
+                isPublished: true);
+            setState(() {
+              posting = true;
+            });
+
+            int productId = await vehicleProvider.sellVehicle(vehicle);
+            int productPresentationPicId = 0;
+            if (productId > 0) {
+              for (PhotoToUpload photo in photoList) {
+                photo.productId = productId;
+                int picId = await photoProvider.uploadPhoto(photo);
+                if (productPresentationPicId == 0) {
+                  productPresentationPicId = picId;
+                }
+              }
+
+              bool setted = await photoProvider
+                  .setProductMainPicture(productPresentationPicId);
+
+              if (setted) {
+                setState(() {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    duration: Duration(seconds: 20),
+                    backgroundColor: Colors.green,
+                    content: Text(
+                        "Vehiculo publicado correctamente"),
+                  ));
+                  posting = false;
+                  Navigator.pop(context);
+                  
+                });
+              }
+            } else {
+              setState(() {
+                posting = false;
+              });
+              FocusScopeNode currentFocus = FocusScope.of(context);
+              if (!currentFocus.hasPrimaryFocus) {
+                currentFocus.unfocus();
+              }
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              duration: Duration(seconds: 10),
-              // backgroundColor: Color(0xffff5b00).withOpacity(.5),
-              content: Text(
-                  "El precio que estableciste no es valido, corrigelo"),
-            ));
-                  return;
-          }
-          final vehicleProvider =
-              Provider.of<VehiclesProvider>(context, listen: false);
-          final authProvider =
-              Provider.of<AuthenticationProvider>(context, listen: false);
-          final photoProvider = Provider.of<PhotoProvider>(context,listen: false);
-          UserResponse currentUser = await authProvider.getCurrentUser();
-          RegisterCar vehicle = RegisterCar(
-              brand: selectedBrandName,
-              contactPhoneNumber: contactNumber.text,
-              createdBy: currentUser.id,
-              isOffer: false,
-              model: selectedBrandModel,
-              vim: "",
-              modificationDate: DateTime.now().toString(),
-              condition: isNew ? "Nuevo" : "Usado",
-              description: descriptionController.text,
-              features: selectedTags,
-              isEnabled: true,
-              name: titleController.text,
-              price: int.parse(priceController.text),
-              registerDate: DateTime.now().toString(),
-              year: yearController.text,
-              isPublished: true);
-          setState(() {
-            posting = true;
-          });
-          for (PhotoToUpload photo in photoList) {
-            bool uploaded = await photoProvider.uploadPhoto(photo);
-          }
-          bool response = await vehicleProvider.sellVehicle(vehicle);
-          if (response) {
-            setState(() {
-              posting = false;
-            });
-          } else {
-            setState(() {
-              posting = false;
-            });
-            FocusScopeNode currentFocus = FocusScope.of(context);
-            if (!currentFocus.hasPrimaryFocus) {
-              currentFocus.unfocus();
+                duration: Duration(seconds: 10),
+                // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+                content: Text(
+                    "Ups, no pudimos publicar este vehiculo, intenta mas tarde"),
+              ));
+              //TODO what to do if fails???
             }
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              duration: Duration(seconds: 10),
-              // backgroundColor: Color(0xffff5b00).withOpacity(.5),
-              content: Text(
-                  "Ups, no pudimos publicar este vehiculo, intenta mas tarde"),
-            ));
-            //TODO what to do if fails???
           }
         },
         enable: !posting,
@@ -1100,82 +1113,129 @@ class _buildState extends State<SellScreen> {
       ],
     );
   }
-  
+
   Future<void> selectNewPic() async {
     // final XFile? image =
-            //     await _picker.pickImage(
-            //         source: ImageSource.gallery);
-            try {
-              FocusScope.of(context).unfocus();
-              final userProvider =
-                  Provider.of<AuthenticationProvider>(context, listen: false);
-              final photoProvider =
-                  Provider.of<PhotoProvider>(context, listen: false);
-              UserResponse currentUser = await userProvider.getCurrentUser();
-              ImagePicker imagePicker = ImagePicker();
-              final imageFile = await imagePicker.getImage(
-                  source: ImageSource.gallery, imageQuality: 25);
-              // File imagen = File(imageFile!.path);
-              // String fileExt = getFileExtension(imagen.path);
-              // String fileRoute = getFileRoute(imagen.path);
-              // File compressed =await
-              //     photoProvider.compressImage(
-              //         imagen, fileRoute+"2"+fileExt);
-              PhotoToUpload photoToUpload = PhotoToUpload();
-              photoToUpload.image = imageFile!.path;
-              photoToUpload.productId = 0;
-              setState(() {
-                photoList.add(photoToUpload);
-              });
-              // bool uploaded = await photoProvider.uploadPhoto(photoToUpload);
-              // if (uploaded) {
-              //   CupertinoAlertDialog(
-              //       title: Text("Completado"),
-              //       content:
-              //           Text("Se ha completado la carga de la imagen 📷"),
-              //       actions: [
-              //         CupertinoDialogAction(
-              //           child: Text("OK"),
-              //           onPressed: () {
-              //             Navigator.of(context).pop();
-              //           },
-              //         )
-              //       ]);
-              //   // CoolAlert.show(
-              //   //     context: context,
-              //   //     animType: CoolAlertAnimType
-              //   //         .slideInDown,
-              //   //     backgroundColor: Colors.white,
-              //   //     loopAnimation: false,
-              //   //     type: CoolAlertType.success,
-              //   //     title: "Completado",
-              //   //     text:
-              //   //         "Se ha completado la carga de la imagen 📷");
-              // }
-              setState(() {});
-            } catch (e) {
-              CupertinoAlertDialog(
-                  title: Text("Ups!"),
-                  content: Text(e.toString()),
-                  actions: [
-                    CupertinoDialogAction(
-                      child: Text("OK"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    )
-                  ]);
-              // CoolAlert.show(
-              //     context: context,
-              //     animType: CoolAlertAnimType.slideInDown,
-              //     backgroundColor: Colors.white,
-              //     loopAnimation: false,
-              //     type: CoolAlertType.error,
-              //     title: "Ups!",
-              //     text: e.toString());
-              setState(() {});
-            } finally {
-              setState(() {});
-            }
+    //     await _picker.pickImage(
+    //         source: ImageSource.gallery);
+    try {
+      FocusScope.of(context).unfocus();
+      final userProvider =
+          Provider.of<AuthenticationProvider>(context, listen: false);
+      final photoProvider = Provider.of<PhotoProvider>(context, listen: false);
+      UserResponse currentUser = await userProvider.getCurrentUser();
+      ImagePicker imagePicker = ImagePicker();
+      final imageFile = await imagePicker.getImage(
+          source: ImageSource.gallery, imageQuality: 25);
+      // File imagen = File(imageFile!.path);
+      // String fileExt = getFileExtension(imagen.path);
+      // String fileRoute = getFileRoute(imagen.path);
+      // File compressed =await
+      //     photoProvider.compressImage(
+      //         imagen, fileRoute+"2"+fileExt);
+      PhotoToUpload photoToUpload = PhotoToUpload();
+      photoToUpload.image = imageFile!.path;
+      photoToUpload.productId = 0;
+      setState(() {
+        photoList.add(photoToUpload);
+      });
+      // bool uploaded = await photoProvider.uploadPhoto(photoToUpload);
+      // if (uploaded) {
+      //   CupertinoAlertDialog(
+      //       title: Text("Completado"),
+      //       content:
+      //           Text("Se ha completado la carga de la imagen 📷"),
+      //       actions: [
+      //         CupertinoDialogAction(
+      //           child: Text("OK"),
+      //           onPressed: () {
+      //             Navigator.of(context).pop();
+      //           },
+      //         )
+      //       ]);
+      //   // CoolAlert.show(
+      //   //     context: context,
+      //   //     animType: CoolAlertAnimType
+      //   //         .slideInDown,
+      //   //     backgroundColor: Colors.white,
+      //   //     loopAnimation: false,
+      //   //     type: CoolAlertType.success,
+      //   //     title: "Completado",
+      //   //     text:
+      //   //         "Se ha completado la carga de la imagen 📷");
+      // }
+      setState(() {});
+    } catch (e) {
+      CupertinoAlertDialog(
+          title: Text("Ups!"),
+          content: Text(e.toString()),
+          actions: [
+            CupertinoDialogAction(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ]);
+      // CoolAlert.show(
+      //     context: context,
+      //     animType: CoolAlertAnimType.slideInDown,
+      //     backgroundColor: Colors.white,
+      //     loopAnimation: false,
+      //     type: CoolAlertType.error,
+      //     title: "Ups!",
+      //     text: e.toString());
+      setState(() {});
+    } finally {
+      setState(() {});
+    }
+  }
+
+  bool checkFieldsValidations() {
+    if (priceController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: Duration(seconds: 10),
+        // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+        content: Text("El precio que estableciste no es valido, corrigelo"),
+      ));
+      return false;
+    }
+    if (titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: Duration(seconds: 10),
+        // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+        content: Text("El titulo que estableciste no es valido, corrigelo"),
+      ));
+      return false;
+    }
+
+    if (selectedBrandName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: Duration(seconds: 10),
+        // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+        content: Text("Selecciona una marca valida"),
+      ));
+      return false;
+    }
+
+    if (selectedBrandModel.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: Duration(seconds: 10),
+        // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+        content: Text("Selecciona un modelo valido"),
+      ));
+      return false;
+    }
+
+    if (yearController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: Duration(seconds: 10),
+        // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+        content: Text("El ano del vehiculo es necesario."),
+      ));
+      return false;
+    }
+
+    return true;
   }
 }

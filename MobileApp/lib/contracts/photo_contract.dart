@@ -9,6 +9,7 @@ abstract class PhotoContract {
   Future<Photo> getPhoto(int photoId);
   Future<bool> deletePhoto(int photoId);
   Future<List<Photo>> getPhotosofAnUser(int userId);
-  Future<bool> uploadPhoto(PhotoToUpload photo);
-  Future<File> compressImage(File image, String targetPath);
+  Future<int> uploadPhoto(PhotoToUpload photo);
+  Future<File>compressImage(File image, String targetPath);
+  Future<bool>setProductMainPicture(int photoId);
 }

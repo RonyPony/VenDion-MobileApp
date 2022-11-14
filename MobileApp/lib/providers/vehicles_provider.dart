@@ -57,7 +57,7 @@ class VehiclesProvider with ChangeNotifier {
     return result;
   }
 
-  Future<bool> sellVehicle(RegisterCar vehicle) async {
+  Future<int> sellVehicle(RegisterCar vehicle) async {
     final response = await _vehiclesContract.sellVehicle(vehicle);
     return response;
   }

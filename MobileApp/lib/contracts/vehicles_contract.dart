@@ -1,6 +1,7 @@
 import 'package:vendion/models/favorites.dart';
 import 'package:vendion/models/models.dart';
 import 'package:vendion/models/register_car.dart';
+import 'package:vendion/models/serverResponse.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 
 import '../models/brands.dart';
@@ -16,7 +17,7 @@ abstract class VehiclesContract {
   Future<bool>isFavorite(int carId,int userId);
   Future<bool>addToFavorites(int carId,int userId);
   Future<bool> removeFromFavorites(int carId, int userId);
-  Future<bool>sellVehicle(RegisterCar vehicle);
+  Future<int>sellVehicle(RegisterCar vehicle);
   Future<List<Brand>> getBrands();
   Future<List<Model>> getModels(String brandName);
 }

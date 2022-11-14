@@ -36,8 +36,12 @@ class PhotoProvider with ChangeNotifier {
     return response;
   }
 
-  Future<bool> uploadPhoto(PhotoToUpload photo) async {
+  Future<int> uploadPhoto(PhotoToUpload photo) async {
     var response = await _service.uploadPhoto(photo);
+    return response;
+  }
+  Future<bool> setProductMainPicture(int photoId) async {
+    final response = await _service.setProductMainPicture(photoId);
     return response;
   }
 

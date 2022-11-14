@@ -96,7 +96,7 @@ class PhotoService implements PhotoContract {
   }
 
   @override
-  Future<bool> uploadPhoto(PhotoToUpload photo) async {
+  Future<int> uploadPhoto(PhotoToUpload photo) async {
     // throw UnimplementedError();
     Future<bool> nullx;
     try {
@@ -119,13 +119,15 @@ class PhotoService implements PhotoContract {
           );
       print(response.statusCode);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
+        return response.data["id"];
+      }else{
+        return 0;
       }
 
-      return false;
+      return 0;
     } catch (e) {
       print(e.toString());
-      return false;
+      return 0;
     }
   }
 
@@ -142,5 +144,31 @@ class PhotoService implements PhotoContract {
     print(result!.lengthSync());
 
     return result;
+  }
+  
+  @override
+  Future<bool> setProductMainPicture(int photoId) async {
+    
+    try {
+      var resp =
+          await Dio().post(serverurl + 'api/photos/makeProductPicture/$photoId');
+
+      if (resp.statusCode == 200) {
+        return true;
+      }
+
+      if (resp.statusCode == "404") {
+        print(" Not Changed");
+      }
+      return false;
+    } on DioError catch (e) {
+      //http error(statusCode not 20x) will be catched here.
+      print(e.response!.statusCode.toString());
+      print('Failed Load Data with status code ${e.response!.statusCode}');
+      return false;
+    } catch (ex) {
+      print("error " + ex.toString());
+      return false;
+    }
   }
 }

@@ -297,7 +297,7 @@ class VehicleService implements VehiclesContract {
   }
   
   @override
-  Future<bool> sellVehicle(RegisterCar vehicle) async {
+  Future<int> sellVehicle(RegisterCar vehicle) async {
    Response? response;
     bool dataResponse;
     var jsonedData = vehicle.toJson();
@@ -306,23 +306,23 @@ class VehicleService implements VehiclesContract {
         jsonedData
       );
       if (response.statusCode == 200 || response.statusCode == 201 ) {
-        return true;
+        return response.data["id"];
       } else {
         if (response.statusCode == 404) {
-          return false;
+          return 0;
         } else {
-          return false;
+          return 0;
         }
       }
     } on DioError catch (e) {
       if (e.response!.statusCode == 400) {
-        return false;
+        return 0;
       } else {
-        return false;
+        return 0;
       }
     } catch (e) {
       print(e);
-      return false;
+      return 0;
     }
   }
 

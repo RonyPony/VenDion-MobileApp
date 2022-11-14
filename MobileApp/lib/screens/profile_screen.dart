@@ -53,7 +53,8 @@ class _stateProfileScreen extends State<ProfileScreen> {
               children: [
                 _buildImage(),
                 _buildSell(),
-                _buildSetting()
+                _buildSetting(),
+                _buildMyVehicles()
               ],
             ),
           ),
@@ -94,6 +95,10 @@ class _stateProfileScreen extends State<ProfileScreen> {
   }
   _buildSetting() {
     return _buildAnOption("setting", "Configuracion",HomeScreen.routeName);
+  }
+
+  _buildMyVehicles() {
+    return _buildAnOption("myVehicles", "Mis publicaciones", HomeScreen.routeName);
   }
   _buildAnOption(String iconName,String name,String routeName){
     Size screen = MediaQuery.of(context).size;
