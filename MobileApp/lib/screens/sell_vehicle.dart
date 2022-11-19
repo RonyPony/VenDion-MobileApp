@@ -37,6 +37,9 @@ class _buildState extends State<SellScreen> {
   List<String> tags = [
     "Alarm",
     "Bluetooth",
+    "Airbags",
+    "ABS",
+    "Radar",
     "Cruise Control",
     "Front Parking Sensor",
     "Digital Dashboard",
@@ -814,7 +817,7 @@ class _buildState extends State<SellScreen> {
                         },
                       ),
                     )
-                  : Text("No image selected"),
+                  : Text("Click arriba para agregar fotos"),
               photoList.length == 0
                   ? Icon(
                       Icons.cloud_upload,
@@ -825,7 +828,17 @@ class _buildState extends State<SellScreen> {
                       padding: const EdgeInsets.only(left: 20),
                       child: GestureDetector(
                           onTap: () {
-                            selectNewPic();
+                            if(photoList.length<=9){
+                              selectNewPic();
+                            }else{
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                    backgroundColor: Colors.red,
+                                content: Text(
+                                    "Hey, solo puedes agregar 10 fotos por cada publicacion, puedes enviar fotos extra por chat."),
+                              ));
+                            }
+                            
                           },
                           child: Icon(
                             Icons.add_a_photo_rounded,

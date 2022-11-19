@@ -4,6 +4,7 @@ import 'package:vendion/screens/favorites_screen.dart';
 import 'package:vendion/screens/filters_screen.dart';
 import 'package:vendion/screens/home_screen.dart';
 import 'package:vendion/screens/login_screen.dart';
+import 'package:vendion/screens/my_vehicles_screen.dart';
 import 'package:vendion/screens/notifications_screen.dart';
 import 'package:vendion/screens/profile_screen.dart';
 import 'package:vendion/screens/register_screen.dart';
@@ -19,5 +20,6 @@ final Map<String, WidgetBuilder> routes = {
   FavoriteScreen.routeName: (context) => FavoriteScreen(),
   ProfileScreen.routeName: (context) => ProfileScreen(),
   SellScreen.routeName:(context) => SellScreen(),
-  VehicleDetails.routeName:((context) => VehicleDetails())
+  VehicleDetails.routeName:((context) => VehicleDetails()),
+  MyVehiclesScreen.routeName:(context) => MyVehiclesScreen(),
 };

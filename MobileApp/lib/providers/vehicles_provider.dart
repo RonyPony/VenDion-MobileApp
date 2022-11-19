@@ -17,6 +17,11 @@ class VehiclesProvider with ChangeNotifier {
     return result;
   }
 
+  Future<List<Vehicle>> getVehiclesByUser(int userId) async {
+    final result = await _vehiclesContract.getVehiclesByUser(userId);
+    return result;
+  }
+
   Future<Vehicle> getVehicleInfo(int vehicleId) async {
     final result = await _vehiclesContract.getVehicleInfo(vehicleId);
     return result;

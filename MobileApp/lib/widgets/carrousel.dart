@@ -47,7 +47,7 @@ class Carrousel extends StatelessWidget {
                               color: Colors.white.withOpacity(.5),
                               borderRadius: BorderRadius.circular(10)),
                           child: Text(
-                            descri,
+                            descri.substring(0,35)+"...",
                             style: TextStyle(color: Colors.black),
                           ),
                         ),

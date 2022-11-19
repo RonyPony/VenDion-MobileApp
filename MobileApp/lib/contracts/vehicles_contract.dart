@@ -20,4 +20,5 @@ abstract class VehiclesContract {
   Future<int>sellVehicle(RegisterCar vehicle);
   Future<List<Brand>> getBrands();
   Future<List<Model>> getModels(String brandName);
+  Future<List<Vehicle>>getVehiclesByUser(int userId);
 }

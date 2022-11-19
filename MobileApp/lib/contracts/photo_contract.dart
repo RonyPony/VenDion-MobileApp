@@ -4,7 +4,7 @@ import '../models/photo.dart';
 import '../models/photoUpload.dart';
 
 abstract class PhotoContract {
-  Future<Photo> getUserProfilePicture(int userId);
+  Future<Photo> getVehiclePicture(int vehicleId);
   Future<List<Photo>> getAllPhotos();
   Future<Photo> getPhoto(int photoId);
   Future<bool> deletePhoto(int photoId);

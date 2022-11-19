@@ -62,20 +62,20 @@ class PhotoService implements PhotoContract {
   }
 
   @override
-  Future<Photo> getUserProfilePicture(int UserId) async {
+  Future<Photo> getVehiclePicture(int vehicleId) async {
     Photo _photo = Photo();
     try {
       var resp =
-          await Dio().get(serverurl + 'api/photos/profilePicture/$UserId');
+          await Dio().get(serverurl + 'api/photos/byVehicle/$vehicleId');
 
       if (resp.statusCode == 200) {
         var lista = resp.data;
         if (lista.length > 0) {
-          _photo.vehicleId = UserId;
+          _photo.vehicleId = vehicleId;
           // String jsoned = jsonDecode(lista);
           _photo = Photo.fromJson(lista);
         } else {
-          _photo.vehicleId = UserId;
+          _photo.vehicleId = vehicleId;
         }
         return _photo;
       }

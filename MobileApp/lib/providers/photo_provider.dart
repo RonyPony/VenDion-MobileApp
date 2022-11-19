@@ -11,8 +11,8 @@ class PhotoProvider with ChangeNotifier {
   final PhotoService _service;
   PhotoProvider(this._service);
 
-  Future<Photo> getUserProfilePicture(int UserId) async {
-    var response = await _service.getUserProfilePicture(UserId);
+  Future<Photo> getVehiclePicture(int vehicleId) async {
+    var response = await _service.getVehiclePicture(vehicleId);
     return response;
   }
 

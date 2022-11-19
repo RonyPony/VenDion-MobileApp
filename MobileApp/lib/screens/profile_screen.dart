@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:vendion/screens/home_screen.dart';
+import 'package:vendion/screens/my_vehicles_screen.dart';
 import 'package:vendion/screens/sell_vehicle.dart';
 
 import '../widgets/bottom_menu.dart';
@@ -15,6 +16,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _stateProfileScreen extends State<ProfileScreen> {
+
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,7 +69,7 @@ class _stateProfileScreen extends State<ProfileScreen> {
     );
   }
 
-  _buildImage() {
+  Widget _buildImage() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Row(
@@ -90,15 +93,182 @@ class _stateProfileScreen extends State<ProfileScreen> {
     );
   }
 
-  _buildSell() {
-    return _buildAnOption("car", "Vender un coche",SellScreen.routeName);
+  Widget _buildSell() {
+    Size screen = MediaQuery.of(context).size;
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, SellScreen.routeName);
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding:
+                  EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Color(0xffedeeef),
+              ),
+              child: Container(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SvgPicture.asset("assets/car.svg"),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: screen.width * .1, right: screen.width * .1),
+                      child: Text(
+                        "Vender un coche",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xff8c9199),
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 37,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SvgPicture.asset("assets/next.svg"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
-  _buildSetting() {
-    return _buildAnOption("setting", "Configuracion",HomeScreen.routeName);
+  Widget _buildSetting() {
+    // return _buildAnOption("setting", "Configuracion",HomeScreen.routeName);
+    Size screen = MediaQuery.of(context).size;
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, HomeScreen.routeName);
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding:
+                  EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Color(0xffedeeef),
+              ),
+              child: Container(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SvgPicture.asset("assets/setting.svg"),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: screen.width * .1, right: screen.width * .1),
+                      child: Text(
+                        "Configuracion",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xff8c9199),
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 37,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SvgPicture.asset("assets/next.svg"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  _buildMyVehicles() {
-    return _buildAnOption("myVehicles", "Mis publicaciones", HomeScreen.routeName);
+  Widget _buildMyVehicles() {
+    // return _buildAnOption("myVehicles", "Mis publicaciones", MyVehiclesScreen.routeName);
+    Size screen = MediaQuery.of(context).size;
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, MyVehiclesScreen.routeName);
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding:
+                  EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Color(0xffedeeef),
+              ),
+              child: Container(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      // child: SvgPicture.asset("assets/$iconName.svg"),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: screen.width * .1, right: screen.width * .1),
+                      child: Text(
+                        "Mis publicaciones",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xff8c9199),
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 37,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SvgPicture.asset("assets/next.svg"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
   _buildAnOption(String iconName,String name,String routeName){
     Size screen = MediaQuery.of(context).size;

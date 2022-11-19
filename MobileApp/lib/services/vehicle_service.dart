@@ -378,4 +378,42 @@ class VehicleService implements VehiclesContract {
       return models;
     }
   }
+  
+  @override
+  Future<List<Vehicle>> getVehiclesByUser(int userId) async {
+    Response? response;
+    List<Vehicle>? dataResponse;
+    try {
+      response = await client.get('api/vehicle/vehiclesByUser/$userId');
+      if (response.statusCode == 200) {
+        dataResponse = List<Vehicle>.from(
+            response.data.map((model) => Vehicle.fromJson(model)));
+        // dataResponse.map((e) async => e.isFavorite = await isFavorite(e.id!, userId));
+        // dataResponse.forEach((element)  {
+        //   // bool isFav =await isFavorite(element.id!, userId);
+        //   element.isFavorite=true;
+        // });
+        for (Vehicle vehi in dataResponse) {
+          bool isFav =await isFavorite(vehi.id!, userId);
+            vehi.isFavorite=isFav;
+        }
+        return dataResponse;
+      } else {
+        if (response.statusCode == 404) {
+          return dataResponse!;
+        } else {
+          return dataResponse!;
+        }
+      }
+    } on DioError catch (e) {
+      if (e.response!.statusCode == 400) {
+        return dataResponse!;
+      } else {
+        return dataResponse!;
+      }
+    } catch (e) {
+      print(e);
+      return dataResponse!;
+    }
+  }
 }

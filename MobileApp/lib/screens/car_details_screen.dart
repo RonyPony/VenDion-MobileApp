@@ -25,7 +25,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
   Vehicle _carInfo = Vehicle();
   String currentPhotoFromGallery = "";
   bool isFavorite = false;
-  
+
   bool addingToFavorite = false;
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,8 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                   return Text("Error occur");
                 }
 
-                if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasData &&
+                    snapshot.connectionState == ConnectionState.done) {
                   return snapshot.data!;
                 }
                 return Text("no data");
@@ -104,7 +105,8 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                 }
                 if (snapshot.hasError) {
                   return Padding(
-                    padding:  EdgeInsets.only(left: MediaQuery.of(context).size.width*.2),
+                    padding: EdgeInsets.only(
+                        left: MediaQuery.of(context).size.width * .2),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -501,75 +503,113 @@ class _VehicleDetailsState extends State<VehicleDetails> {
   }
 
   _buildBuyNowBtn() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 30),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.pushNamedAndRemoveUntil(
-              context, HomeScreen.routeName, (route) => false);
-        },
-        child: CustomBtn(
-          mainBtn: true,
-          onTap: () {},
-          enable: true,
-          text: "Buy Now",
-        ),
-      ),
+    final prov = Provider.of<AuthenticationProvider>(context, listen: false);
+    Future<UserResponse> currentUser = prov.getCurrentUser();
+    return FutureBuilder<UserResponse>(
+      future: currentUser,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        }
+        if (snapshot.hasError) {
+          return Text("Error getting current user info");
+        }
+
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          if (_carInfo.createdBy == snapshot.data!.id) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 30),
+              child: GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                        "En estos momentos no puedes editar este vehiculo, intentalo mas tarde"),
+                  ));
+                },
+                child: CustomBtn(
+                  mainBtn: true,
+                  onTap: () {},
+                  enable: true,
+                  text: "Editar Vehiculo",
+                ),
+              ),
+            );
+          } else {
+            return Padding(
+              padding: const EdgeInsets.only(top: 30),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, HomeScreen.routeName, (route) => false);
+                },
+                child: CustomBtn(
+                  mainBtn: true,
+                  onTap: () {},
+                  enable: true,
+                  text: "Buy Now",
+                ),
+              ),
+            );
+          }
+        }
+
+        return Text("No info");
+      },
     );
   }
 
-  Future<Widget>_buildAdd2FavBtn() async {
+  Future<Widget> _buildAdd2FavBtn() async {
     final prov = Provider.of<VehiclesProvider>(context, listen: false);
     final authProvider =
         Provider.of<AuthenticationProvider>(context, listen: false);
     UserResponse usr = await authProvider.getCurrentUser();
-    bool isFavorite = await prov.isFavorite(_carInfo.id!,usr.id!);
+    bool isFavorite = await prov.isFavorite(_carInfo.id!, usr.id!);
 
-
-    return !isFavorite?Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: GestureDetector(
-        onTap: () async {
-         
-          setState(() {
-             addingToFavorite=true;
-          });
-          final authProv =
-              Provider.of<AuthenticationProvider>(context, listen: false);
-          UserResponse usr = await authProv.getCurrentUser();
-          // prov.addToFavorite(_carInfo.id!, usr.id!);
-          Future.delayed(Duration(seconds: 2),(){
-           setState(() {}); 
-          });
-          prov.addToFavorite(_carInfo.id!, usr.id!);
-          
-        },
-        child: Container(
-          width: MediaQuery.of(context).size.width * .8,
-          height: 64,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: Colors.grey.withOpacity(.2),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(!addingToFavorite?
-                "Add To Favorites":"Updating...",
-                style: TextStyle(
-                  color: !addingToFavorite?Color(0xffff5b00):Color(0xffff5b00).withOpacity(.5),
-                  fontSize: 18,
-                  fontFamily: "Poppins",
-                  fontWeight: FontWeight.w600,
+    return !isFavorite
+        ? Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: GestureDetector(
+              onTap: () async {
+                setState(() {
+                  addingToFavorite = true;
+                });
+                final authProv =
+                    Provider.of<AuthenticationProvider>(context, listen: false);
+                UserResponse usr = await authProv.getCurrentUser();
+                // prov.addToFavorite(_carInfo.id!, usr.id!);
+                Future.delayed(Duration(seconds: 2), () {
+                  setState(() {});
+                });
+                prov.addToFavorite(_carInfo.id!, usr.id!);
+              },
+              child: Container(
+                width: MediaQuery.of(context).size.width * .8,
+                height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.withOpacity(.2),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      !addingToFavorite ? "Add To Favorites" : "Updating...",
+                      style: TextStyle(
+                        color: !addingToFavorite
+                            ? Color(0xffff5b00)
+                            : Color(0xffff5b00).withOpacity(.5),
+                        fontSize: 18,
+                        fontFamily: "Poppins",
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    )
-    :
-    Padding(
+            ),
+          )
+        : Padding(
             padding: const EdgeInsets.only(top: 20),
             child: GestureDetector(
               onTap: () async {
