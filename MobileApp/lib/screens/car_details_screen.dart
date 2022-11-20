@@ -9,6 +9,7 @@ import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/models/vehicles.dart';
 import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
+import 'package:vendion/screens/sell_vehicle.dart';
 
 import '../widgets/main_button_widget.dart';
 import 'home_screen.dart';
@@ -520,19 +521,17 @@ class _VehicleDetailsState extends State<VehicleDetails> {
           if (_carInfo.createdBy == snapshot.data!.id) {
             return Padding(
               padding: const EdgeInsets.only(top: 30),
-              child: GestureDetector(
+              child: CustomBtn(
+                mainBtn: true,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                        "En estos momentos no puedes editar este vehiculo, intentalo mas tarde"),
-                  ));
+                  // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  //   content: Text(
+                  //       "En estos momentos no puedes editar este vehiculo, intentalo mas tarde"),
+                  // ));
+                  Navigator.pushNamed(context, SellScreen.routeName, arguments: _carInfo.id);
                 },
-                child: CustomBtn(
-                  mainBtn: true,
-                  onTap: () {},
-                  enable: true,
-                  text: "Editar Vehiculo",
-                ),
+                enable: true,
+                text: "Editar Vehiculo",
               ),
             );
           } else {

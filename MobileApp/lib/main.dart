@@ -27,10 +27,11 @@ class MyApp extends StatelessWidget {
               AuthenticationProvider(AuthenticationService(), UserService()),
         ),
         ChangeNotifierProvider(
-          create: (context) =>
-              VehiclesProvider(VehicleService()),
+          create: (context) => VehiclesProvider(VehicleService()),
         ),
-        ChangeNotifierProvider(create:(context) => PhotoProvider(PhotoService()),)
+        ChangeNotifierProvider(
+          create: (context) => PhotoProvider(PhotoService()),
+        )
       ],
       child: MaterialApp(
         title: 'VenDionApp',
@@ -67,12 +68,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       appBar: AppBar(
-        title:Text("VenDion"),
+        title: Text("VenDion"),
       ),
-      
     );
   }
 }

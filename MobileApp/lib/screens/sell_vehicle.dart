@@ -69,6 +69,8 @@ class _buildState extends State<SellScreen> {
   bool posting = false;
   List<PhotoToUpload> photoList = [];
 
+  bool editMode = false;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -78,6 +80,17 @@ class _buildState extends State<SellScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var args;
+    try {
+       args = ModalRoute.of(context)!.settings.arguments! as int;
+
+    } catch (e) {
+      args=0;
+    }
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    Future<Vehicle> vehicleInfo = vehicleProvider.getVehicleInfo(args);
+  editMode = args>0;
     return Scaffold(
       backgroundColor: Colors.white,
       // drawer: GeneralDrawer(),
@@ -108,38 +121,93 @@ class _buildState extends State<SellScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildLabel("Titulo"),
-            _splitter(.01),
-            _buildTitle(),
-            _splitter(.02),
-            _buildLabel("Marca y Modelo"),
-            _splitter(.01),
-            _buildBrandModel(),
-            _splitter(.02),
-            _buildConditionAndYear(),
-            _splitter(.02),
-            _buildLabel("Features"),
-            _buildSelectedTags(),
-            _splitter(.01),
-            _buildSearch(),
-            _buildTags(),
-            _splitter(.01),
-            _buildLocationAndPrice(),
-            _splitter(.02),
-            _buildLabel("Numero de contacto"),
-            _splitter(.01),
-            _buildNumber(),
-            _splitter(.02),
-            _buildLabel("Descripcion"),
-            _splitter(.01),
-            _buildDesription(),
-            _buildUploadPhotos(),
-            _buildSellBtn(),
-            _buildGoBackBtn()
-          ],
-        ),
+          child: editMode? FutureBuilder<Vehicle>(
+        future: vehicleInfo,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Column(
+              children: [
+                LinearProgressIndicator(color: Colors.orange,backgroundColor: Colors.white,),
+                Text("Sincronizando informacion del vehiculo")
+              ],
+            );
+          }
+          if (snapshot.hasError) {
+            return Text("Error Loading info");
+          }
+          if (snapshot.connectionState == ConnectionState.done) {
+              titleController.text = snapshot.data!.name!;
+              selectedBrandName = snapshot.data!.brand!;
+              yearController.text = snapshot.data!.year!;
+              selectedTags = snapshot.data!.features!;
+              // locationController.text = snapshot.data!.
+            return Column(
+              children: [
+                _buildLabel("Titulo"),
+                _splitter(.01),
+                _buildTitle(),
+                _splitter(.02),
+                _buildLabel("Marca y Modelo"),
+                _splitter(.01),
+                _buildBrandModel(),
+                _splitter(.02),
+                _buildConditionAndYear(),
+                _splitter(.02),
+                _buildLabel("Features"),
+                _buildSelectedTags(),
+                _splitter(.01),
+                _buildSearch(),
+                _buildTags(),
+                _splitter(.01),
+                _buildLocationAndPrice(),
+                _splitter(.02),
+                _buildLabel("Numero de contacto"),
+                _splitter(.01),
+                _buildNumber(),
+                _splitter(.02),
+                _buildLabel("Descripcion"),
+                _splitter(.01),
+                _buildDesription(),
+                _buildUploadPhotos(),
+                _buildSellBtn(),
+                _buildGoBackBtn()
+              ],
+            );
+          }
+          return Text("No info to load");
+        },
+      ): Column(
+                  children: [
+                    _buildLabel("Titulo"),
+                    _splitter(.01),
+                    _buildTitle(),
+                    _splitter(.02),
+                    _buildLabel("Marca y Modelo"),
+                    _splitter(.01),
+                    _buildBrandModel(),
+                    _splitter(.02),
+                    _buildConditionAndYear(),
+                    _splitter(.02),
+                    _buildLabel("Features"),
+                    _buildSelectedTags(),
+                    _splitter(.01),
+                    _buildSearch(),
+                    _buildTags(),
+                    _splitter(.01),
+                    _buildLocationAndPrice(),
+                    _splitter(.02),
+                    _buildLabel("Numero de contacto"),
+                    _splitter(.01),
+                    _buildNumber(),
+                    _splitter(.02),
+                    _buildLabel("Descripcion"),
+                    _splitter(.01),
+                    _buildDesription(),
+                    _buildUploadPhotos(),
+                    _buildSellBtn(),
+                    _buildGoBackBtn()
+                  ],
+                )
       ),
     );
   }
@@ -828,17 +896,16 @@ class _buildState extends State<SellScreen> {
                       padding: const EdgeInsets.only(left: 20),
                       child: GestureDetector(
                           onTap: () {
-                            if(photoList.length<=9){
+                            if (photoList.length <= 9) {
                               selectNewPic();
-                            }else{
+                            } else {
                               ScaffoldMessenger.of(context)
                                   .showSnackBar(SnackBar(
-                                    backgroundColor: Colors.red,
+                                backgroundColor: Colors.red,
                                 content: Text(
                                     "Hey, solo puedes agregar 10 fotos por cada publicacion, puedes enviar fotos extra por chat."),
                               ));
                             }
-                            
                           },
                           child: Icon(
                             Icons.add_a_photo_rounded,
@@ -922,12 +989,10 @@ class _buildState extends State<SellScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     duration: Duration(seconds: 20),
                     backgroundColor: Colors.green,
-                    content: Text(
-                        "Vehiculo publicado correctamente"),
+                    content: Text("Vehiculo publicado correctamente"),
                   ));
                   posting = false;
                   Navigator.pop(context);
-                  
                 });
               }
             } else {

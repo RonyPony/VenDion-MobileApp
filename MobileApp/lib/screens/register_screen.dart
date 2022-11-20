@@ -15,8 +15,10 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _userController = TextEditingController();
-
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
 
   @override
@@ -90,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   _buildForm() {
     const String assetName = 'assets/user.svg';
     final Widget svg = SvgPicture.asset(assetName, semanticsLabel: ' Logo');
-    final Widget emailSvg = SvgPicture.asset('assets/lock.svg', semanticsLabel: ' Logo');
+    final Widget lockSvg = SvgPicture.asset('assets/lock.svg', semanticsLabel: ' Logo');
     return Padding(
         padding: EdgeInsets.only(
             left: 20, right: 20, top: MediaQuery.of(context).size.height * .03),
@@ -99,39 +101,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
             CustomTextBox(
               onChange: () {},
               svg: svg,
-              text: "Nombre Completo",
+              text: "Nombre",
               isPassword: false,
-              controller: _userController,
+              controller: _nameController,
             ),
             const SizedBox(
               height: 20,
             ),
             CustomTextBox(
               onChange: () {},
-              svg: emailSvg,
+              svg: Icon(Icons.family_restroom_rounded,color: Colors.grey,),
+              text: "Apellidos",
+              isPassword: false,
+              controller: _lastNameController,
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            CustomTextBox(
+              onChange: () {},
+              svg: Icon(Icons.email_outlined,color: Colors.grey,),
               text: "Email",
               isPassword: false,
-              controller: _userController,
+              controller: _emailController,
             ),
             const SizedBox(
               height: 20,
             ),
             CustomTextBox(
               onChange: () {},
-              svg: svg,
+              svg: Icon(Icons.phone,color: Colors.grey,),
               text: "Telefono",
               isPassword: false,
-              controller: _userController,
+              controller: _phoneController,
             ),
             const SizedBox(
               height: 20,
             ),
             CustomTextBox(
               onChange: () {},
-              svg: svg,
+              svg: lockSvg,
               text: "Clave",
               isPassword: false,
-              controller: _userController,
+              controller: _passController,
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            CustomTextBox(
+              onChange: () {},
+              svg: lockSvg,
+              text: "Rep. Clave",
+              isPassword: false,
+              controller: _passController,
             ),
           ],
         ));
@@ -143,7 +165,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: CustomBtn(
         mainBtn: true,
         enable: true,
-        onTap: () {},
+        onTap: () {
+          
+        },
         text: "Register",
       ),
     );
