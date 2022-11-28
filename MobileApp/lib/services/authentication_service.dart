@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vendion/config/env_config.dart';
 import 'package:vendion/contracts/auth_contract.dart';
+import 'package:vendion/models/serverResponse.dart';
 
 import '../helpers/network_util.dart';
 import '../models/client_user.dart';
@@ -113,7 +114,7 @@ class AuthenticationService implements AuthContract {
     if (result==null) {
       return UserLoginReponse(
           hasError: true,
-          errorDetails: "We couldn't validate your information, please try again");
+          errorDetails: "Credenciales incorrectas");
     }
     if (result is UserLoginReponse) {
       if (remember) {
@@ -227,47 +228,63 @@ class AuthenticationService implements AuthContract {
   }
 
   @override
-  Future<String?> register(ClientUser user) async {
-    String? errorMessage = '';
+  Future<ServerResponse> register(ClientUser user) async {
+    ServerResponse serverResponse = ServerResponse();
     try {
       final client = NetworkUtil.getClient();
 
-      final response = await client.post('clients', data: user.toJson());
+      final response = await client.post('api/user', data: user.toJson());
 
       if (response.statusCode! < 400) {
-        return response.data['CustomerId'].toString();
+        serverResponse.success=true;
+        return serverResponse;
       }
+      //duplicateEmail
+      //This email is already registered, try to login
+      // emptyEmail
+      //Please provide an email address
+      //userNotFound
 
-      errorMessage = _getErrorMessage(response.data);
-
-      throw PlatformException(
-          code: "${response.statusCode}",
-          message: "RegistrationError.",
-          details: '${response.data['message']}');
+      serverResponse.message = _getErrorMessage(response.data);
+      serverResponse.success=false;
+      // serverResponse.message="RegistrationError.";
+      serverResponse.details=response.toString();
+      return serverResponse;
     } catch (e) {
-      errorMessage = errorMessage!.isEmpty ? e.toString() : errorMessage;
-      throw Exception(errorMessage);
+      serverResponse.message =  e.toString();
+      return serverResponse;
     }
   }
 
-  String? _getErrorMessage(Map<String?, dynamic> jsonModel) {
-    if (jsonModel['Message'] != null) {
-      return jsonModel['Message'];
-    } else if (jsonModel['message'] != null) {
-      return jsonModel['message'];
-    } else {
-      // ignore: unused_local_variable
-      var title = jsonModel['title'];
-      // ignore: unused_local_variable
-      var status = jsonModel['status'];
-      Map errors = jsonModel['errors'];
-
-      var messages = errors.values
-          .where((element) => element.toString().isNotEmpty)
-          .toList();
-      var result = messages[0].elementAt(0);
-      return result;
+  String? _getErrorMessage(dynamic data) {
+    if (data is String) {
+      
+      switch (data) {
+      case "duplicateEmail":
+        return "Este correo electronico ya existe, por favor accede.";
+        break;
+      default:
+      return "Error desconocido";
     }
+    }
+    
+    // if (jsonModel['Message'] != null) {
+    //   return jsonModel['Message'];
+    // } else if (jsonModel['message'] != null) {
+    //   return jsonModel['message'];
+    // } else {
+    //   // ignore: unused_local_variable
+    //   var title = jsonModel['title'];
+    //   // ignore: unused_local_variable
+    //   var status = jsonModel['status'];
+    //   Map errors = jsonModel['errors'];
+
+    //   var messages = errors.values
+    //       .where((element) => element.toString().isNotEmpty)
+    //       .toList();
+    //   var result = messages[0].elementAt(0);
+    //   return result;
+    // }
   }
 
   @override

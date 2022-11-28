@@ -3,13 +3,15 @@ class ServerResponse {
   String? message;
   dynamic searchCriteria;
   dynamic results;
+  bool? success;
+  String? details;
 
-  ServerResponse({this.count, this.message, this.searchCriteria, this.results});
+  ServerResponse({this.count, this.message, this.searchCriteria, this.results,this.success,this.details});
 
   ServerResponse.fromJson(Map<String, dynamic> json) {
     count = json['Count'];
     message = json['Message'];
-    searchCriteria = json['SearchCriteria'];
+    searchCriteria = json['SearchCriteria'];    
     if (json['Results'] != null) {
       results = [];
       json['Results'].forEach((v) {

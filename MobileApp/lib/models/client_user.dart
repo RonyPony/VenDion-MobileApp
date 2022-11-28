@@ -1,10 +1,10 @@
 class ClientUser {
   String? password;
   String? confirmPassword;
-  String? firstName;
+  String? name;
   String? lastName;
   String? email;
-  String? phoneNumber;
+  String? phone;
   String? birthDate;
   String? countryName;
   String? city;
@@ -17,13 +17,13 @@ class ClientUser {
     this.email,
     this.password,
     this.confirmPassword,
-    this.firstName,
+    this.name,
     this.lastName,
     this.countryName,
     this.city,
     this.address1,
     this.zipPostalCode,
-    this.phoneNumber,
+    this.phone,
     this.longitude,
     this.latitude,
     this.birthDate,
@@ -33,13 +33,13 @@ class ClientUser {
     email = json['email'];
     password = json['password'];
     confirmPassword = json['confirmPassword'];
-    firstName = json['firstName'];
+    name = json['name'];
     lastName = json['lastName'];
     countryName = json['countryName'];
     city = json['city'];
     address1 = json['address1'];
     zipPostalCode = json['zipPostalCode'];
-    phoneNumber = json['phoneNumber'];
+    phone = json['phone'];
     longitude = json['longitude'];
     latitude = json['latitude'];
     birthDate = json['dateOfBirth'];
@@ -50,13 +50,13 @@ class ClientUser {
     data['email'] = email;
     data['password'] = password;
     data['confirmPassword'] = confirmPassword;
-    data['firstName'] = firstName;
+    data['name'] = name;
     data['lastName'] = lastName;
     data['countryName'] = countryName;
     data['city'] = city;
     data['address1'] = address1;
     data['zipPostalCode'] = zipPostalCode;
-    data['phoneNumber'] = phoneNumber;
+    data['phone'] = phone;
     data['longitude'] = longitude;
     data['latitude'] = latitude;
     data['dateOfBirth'] = birthDate;

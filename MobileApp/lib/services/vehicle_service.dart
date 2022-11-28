@@ -271,6 +271,7 @@ class VehicleService implements VehiclesContract {
   Future<Vehicle> getVehicleInfo(int vehicleId) async {
     Response? response;
     Vehicle? dataResponse;
+    if(vehicleId == 0){return Vehicle();}
     try {
       response = await client.get('api/vehicle/'+vehicleId.toString());
       if (response.statusCode == 200) {

@@ -171,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 context, HomeScreen.routeName, (route) => false);
           }else{
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text("Ups, something wrong happened - ${loggedin.errorInfo}"),
+              content: Text("Ups, algo paso en el proceso, intentalo luego - ${loggedin.errorInfo}"),
             ));
           }
           setState(() {
@@ -204,8 +204,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           GestureDetector(
             onTap: (){
-              Navigator.pushNamedAndRemoveUntil(
-                  context, RegisterScreen.routeName, (route) => false);
+              Navigator.pushNamed(
+                  context, RegisterScreen.routeName);
             },
             child: Text(
               "Registrate",

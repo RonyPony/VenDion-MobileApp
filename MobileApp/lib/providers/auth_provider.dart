@@ -2,6 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:vendion/contracts/user_contract.dart';
+import 'package:vendion/models/serverResponse.dart';
 
 import '../contracts/auth_contract.dart';
 import '../models/change_password_request.dart';
@@ -115,8 +116,8 @@ class AuthenticationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String?> register(ClientUser user) async {
-    await validateUser(user);
+  Future<ServerResponse> register(ClientUser user) async {
+    // await validateUser(user);
 
     final registration = await _authenticationService.register(user);
 
@@ -135,7 +136,7 @@ class AuthenticationProvider with ChangeNotifier {
     }
 
     final existsPhoneNumber =
-        await _userService.existsPhoneNumber(user.phoneNumber);
+        await _userService.existsPhoneNumber(user.phone);
 
     if (existsPhoneNumber) {
       throw PlatformException(

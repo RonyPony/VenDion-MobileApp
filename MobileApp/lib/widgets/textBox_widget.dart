@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/diagnostics.dart';
 
 class CustomTextBox extends StatelessWidget {
-  const CustomTextBox({Key? key,required this.text,required this.controller, required this.onChange, this.isPassword=false, required this.svg}) : super(key: key);
+  const CustomTextBox({Key? key,required this.text,required this.controller, required this.onChange, this.isPassword=false, required this.svg, this.canBeEmpty = false, this.keyboardType = TextInputType.text}) : super(key: key);
   final String text;
  final bool isPassword;
+ final bool canBeEmpty;
+ final TextInputType keyboardType;
  final Function onChange;
  final Widget svg;
  final TextEditingController controller;
@@ -38,7 +40,16 @@ class CustomTextBox extends StatelessWidget {
           Container(
             height: 50,
             width: 260,
-            child: TextField(
+            child: TextFormField(
+              keyboardType: keyboardType,
+              validator: (value) {
+                if (!canBeEmpty) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor escribe $text';
+                  }
+                }
+                return null;
+              },
               onChanged: onChange(),
               controller: controller,
               obscureText: isPassword,

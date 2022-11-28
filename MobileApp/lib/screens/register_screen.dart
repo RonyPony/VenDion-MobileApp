@@ -1,5 +1,11 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:vendion/models/client_user.dart';
+import 'package:vendion/models/serverResponse.dart';
+import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/screens/login_screen.dart';
 
 import '../widgets/main_button_widget.dart';
@@ -20,6 +26,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
+  final TextEditingController repPass = TextEditingController();
+  
+  final _formKey = GlobalKey<FormState>();
+  
+  bool isRegistering = false;
 
   @override
   Widget build(BuildContext context) {
@@ -96,66 +107,76 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Padding(
         padding: EdgeInsets.only(
             left: 20, right: 20, top: MediaQuery.of(context).size.height * .03),
-        child: Column(
-          children: [
-            CustomTextBox(
-              onChange: () {},
-              svg: svg,
-              text: "Nombre",
-              isPassword: false,
-              controller: _nameController,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            CustomTextBox(
-              onChange: () {},
-              svg: Icon(Icons.family_restroom_rounded,color: Colors.grey,),
-              text: "Apellidos",
-              isPassword: false,
-              controller: _lastNameController,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            CustomTextBox(
-              onChange: () {},
-              svg: Icon(Icons.email_outlined,color: Colors.grey,),
-              text: "Email",
-              isPassword: false,
-              controller: _emailController,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            CustomTextBox(
-              onChange: () {},
-              svg: Icon(Icons.phone,color: Colors.grey,),
-              text: "Telefono",
-              isPassword: false,
-              controller: _phoneController,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            CustomTextBox(
-              onChange: () {},
-              svg: lockSvg,
-              text: "Clave",
-              isPassword: false,
-              controller: _passController,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            CustomTextBox(
-              onChange: () {},
-              svg: lockSvg,
-              text: "Rep. Clave",
-              isPassword: false,
-              controller: _passController,
-            ),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              CustomTextBox(
+                onChange: () {
+                  // _formKey.currentState!.validate();
+                },
+                svg: svg,
+                keyboardType: TextInputType.name,
+                text: "Nombre",
+                isPassword: false,
+                controller: _nameController,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              CustomTextBox(
+                onChange: () {},
+                svg: Icon(Icons.family_restroom_rounded,color: Colors.grey,),
+                keyboardType: TextInputType.name,
+                text: "Apellidos",
+                isPassword: false,
+                controller: _lastNameController,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              CustomTextBox(
+                onChange: () {},
+                svg: Icon(Icons.email_outlined,color: Colors.grey,),
+                keyboardType: TextInputType.emailAddress,
+                text: "Email",
+                isPassword: false,
+                controller: _emailController,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              CustomTextBox(
+                onChange: () {},
+                svg: Icon(Icons.phone,color: Colors.grey,),
+                keyboardType: TextInputType.phone,
+                text: "Telefono",
+                isPassword: false,
+                controller: _phoneController,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              CustomTextBox(
+                onChange: () {},
+                svg: lockSvg,
+                text: "Clave",
+                keyboardType: TextInputType.visiblePassword,
+                isPassword: true,
+                controller: _passController,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              CustomTextBox(
+                onChange: () {},
+                svg: lockSvg,
+                text: "Rep. Clave",
+                isPassword: true,
+                controller: repPass,
+              ),
+            ],
+          ),
         ));
   }
 
@@ -164,9 +185,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.only(top: 30),
       child: CustomBtn(
         mainBtn: true,
-        enable: true,
-        onTap: () {
+        enable: !isRegistering,
+        loadingText: "Registrando...",
+        onTap: () async {
+          setState(() {
+            isRegistering = true;
+          });
+          if (_passController.text != repPass.text) {
+            return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              backgroundColor: Colors.red,
+              content: Text("Las claves no coinciden"),
+            ));
+          }
           
+          if (_formKey.currentState!.validate()) {
+            final bool emailValid = RegExp(
+                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                .hasMatch(_emailController.text);
+            if (!emailValid) {
+              return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                backgroundColor: Colors.red,
+                content: Text("Este correo electronico no es valido"),
+              ));
+            }
+          final provider =
+                Provider.of<AuthenticationProvider>(context, listen: false);
+            ClientUser usr = ClientUser(
+                name: _nameController.text,
+                lastName: _lastNameController.text,
+                email: _emailController.text,
+                phone: _phoneController.text,
+                password: _passController.text);
+            ServerResponse response = await provider.register(usr);
+            print(response.success);
+            if (!response.success!) {
+              setState(() {
+                isRegistering = false;
+              });
+              return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                backgroundColor: Colors.red,
+                content: Text(response.message!),
+              ));
+            }
+            if (response.success!) {
+              setState(() {
+                isRegistering = false;
+              });
+               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                backgroundColor: Colors.green,
+                content: Text("Registro completado"),
+              ));
+              Navigator.pop(context);
+            }
+            
+          }
+            
+          setState(() {
+            isRegistering = false;
+          });
         },
         text: "Register",
       ),
@@ -317,4 +393,5 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+ 
 }

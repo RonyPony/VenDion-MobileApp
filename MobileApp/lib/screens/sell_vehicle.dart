@@ -87,8 +87,7 @@ class _buildState extends State<SellScreen> {
     } catch (e) {
       args=0;
     }
-    final vehicleProvider =
-        Provider.of<VehiclesProvider>(context, listen: false);
+    final vehicleProvider =Provider.of<VehiclesProvider>(context, listen: false);
     Future<Vehicle> vehicleInfo = vehicleProvider.getVehicleInfo(args);
   editMode = args>0;
     return Scaffold(

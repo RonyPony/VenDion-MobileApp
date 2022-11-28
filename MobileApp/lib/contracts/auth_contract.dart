@@ -1,3 +1,5 @@
+import 'package:vendion/models/serverResponse.dart';
+
 import '../models/client_user.dart';
 import '../models/new_password_request.dart';
 import '../models/user_response.dart';
@@ -12,7 +14,7 @@ abstract class AuthContract{
   Future<dynamic> searchUserByEmail(String? email);
   Future changePassWord(NewPasswordRequest changePasswordRequest, int idUser);
 
-  Future<String?> register(ClientUser user);
+  Future<ServerResponse> register(ClientUser user);
 
   Future signOutUser();
 
