@@ -15,6 +15,7 @@ class RegisterCar {
   String? year;
   String? vim;
   String? condition;
+  String? location;
 
   RegisterCar(
       {this.createdBy,
@@ -32,6 +33,7 @@ class RegisterCar {
       this.model,
       this.year,
       this.vim,
+      this.location,
       this.condition});
 
   RegisterCar.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,7 @@ class RegisterCar {
     price = json['price'];
     contactPhoneNumber = json['contactPhoneNumber'];
     name = json['name'];
+    location = json['location'];
     description = json['description'];
     registerDate = json['registerDate'];
     modificationDate = json['modificationDate'];
@@ -61,6 +64,7 @@ class RegisterCar {
     data['isOffer'] = this.isOffer;
     data['features'] = this.features;
     data['price'] = this.price;
+    data['location']=this.location;
     data['contactPhoneNumber'] = this.contactPhoneNumber;
     data['name'] = this.name;
     data['description'] = this.description;

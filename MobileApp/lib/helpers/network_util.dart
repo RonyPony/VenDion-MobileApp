@@ -25,7 +25,7 @@ class NetworkUtil {
   static Dio getClient() {
     final Dio dio = _createClient();
     dio.options.followRedirects = true;
-
+    dio.options.connectTimeout = 5000;
     dio.options.validateStatus = (status) {
       return status! < 500;
     };
@@ -46,7 +46,7 @@ class NetworkUtil {
   }
 
   static Dio _createClient() {
-    String? apiName = EnvConfig.configs['userAuthenticationApiUrl'];
+    String? apiName = EnvConfig.configs['serverurl'];
     Dio dio = Dio();
     dio.options.baseUrl = '${apiName}';
     dio.options.connectTimeout = 20 * 3000;
@@ -56,7 +56,7 @@ class NetworkUtil {
   }
 
   static Dio _createTokenClient() {
-    String? apiName = EnvConfig.configs['userAuthenticationApiUrl'];
+    String? apiName = EnvConfig.configs['serverurl'];
     Dio dio = Dio();
     dio.options.baseUrl = '${apiName}api/';
     dio.options.connectTimeout = 20 * 3000;

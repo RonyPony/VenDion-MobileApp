@@ -9,6 +9,7 @@ import '../models/change_password_request.dart';
 import '../models/client_user.dart';
 import '../models/new_password_request.dart';
 import '../models/user_login_response.dart';
+import '../models/user_register.dart';
 import '../models/user_response.dart';
 
 class AuthenticationProvider with ChangeNotifier {
@@ -116,7 +117,7 @@ class AuthenticationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<ServerResponse> register(ClientUser user) async {
+  Future<ServerResponse> register(UserToRegister user) async {
     // await validateUser(user);
 
     final registration = await _authenticationService.register(user);

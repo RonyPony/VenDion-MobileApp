@@ -43,7 +43,7 @@ class Vehicle {
     createdBy = json['createdBy'];
     isEnabled = json['isEnabled'];
     isPublished = json['isPublished'];
-    features = json['features'].cast<String>();
+    // features = json['features'].cast<String>();
     price = json['price'];
     contactPhoneNumber = json['contactPhoneNumber'];
     name = json['name'];
@@ -64,7 +64,7 @@ class Vehicle {
     data['createdBy'] = this.createdBy;
     data['isEnabled'] = this.isEnabled;
     data['isPublished'] = this.isPublished;
-    data['features'] = this.features;
+    // data['features'] = this.features;
     data['price'] = this.price;
     data['contactPhoneNumber'] = this.contactPhoneNumber;
     data['name'] = this.name;

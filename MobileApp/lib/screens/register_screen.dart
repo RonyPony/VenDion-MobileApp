@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:vendion/models/client_user.dart';
 import 'package:vendion/models/serverResponse.dart';
+import 'package:vendion/models/user_register.dart';
 import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/screens/login_screen.dart';
 
@@ -188,6 +189,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         enable: !isRegistering,
         loadingText: "Registrando...",
         onTap: () async {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus) {
+            currentFocus.unfocus();
+          }
           setState(() {
             isRegistering = true;
           });
@@ -210,7 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             }
           final provider =
                 Provider.of<AuthenticationProvider>(context, listen: false);
-            ClientUser usr = ClientUser(
+            UserToRegister usr = UserToRegister(
                 name: _nameController.text,
                 lastName: _lastNameController.text,
                 email: _emailController.text,

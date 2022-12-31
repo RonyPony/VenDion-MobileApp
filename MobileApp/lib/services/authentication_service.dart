@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vendion/config/env_config.dart';
 import 'package:vendion/contracts/auth_contract.dart';
 import 'package:vendion/models/serverResponse.dart';
+import 'package:vendion/models/user_register.dart';
 
 import '../helpers/network_util.dart';
 import '../models/client_user.dart';
@@ -228,7 +229,7 @@ class AuthenticationService implements AuthContract {
   }
 
   @override
-  Future<ServerResponse> register(ClientUser user) async {
+  Future<ServerResponse> register(UserToRegister user) async {
     ServerResponse serverResponse = ServerResponse();
     try {
       final client = NetworkUtil.getClient();
@@ -251,7 +252,12 @@ class AuthenticationService implements AuthContract {
       serverResponse.details=response.toString();
       return serverResponse;
     } catch (e) {
-      serverResponse.message =  e.toString();
+      serverResponse.message = e.toString();
+      serverResponse.success = false;
+      if (e is DioError) {
+        serverResponse.message = e.message;
+      }
+      
       return serverResponse;
     }
   }

@@ -703,6 +703,7 @@ class _buildState extends State<SellScreen> {
                     width: 130,
                     child: TextField(
                       // cursorHeight: 30,
+                      controller: locationController,
                       cursorColor: Color(0xffff5b00),
                       decoration: InputDecoration(
                         hintText: "Locacion",
@@ -964,6 +965,7 @@ class _buildState extends State<SellScreen> {
                 price: int.parse(priceController.text),
                 registerDate: DateTime.now().toString(),
                 year: yearController.text,
+                location: locationController.text,
                 isPublished: true);
             setState(() {
               posting = true;
@@ -979,9 +981,14 @@ class _buildState extends State<SellScreen> {
                   productPresentationPicId = picId;
                 }
               }
+bool setted = false;
 
-              bool setted = await photoProvider
+              if(productPresentationPicId>0){
+                setted = await photoProvider
                   .setProductMainPicture(productPresentationPicId);
+              }else{
+                setted=true;
+              }
 
               if (setted) {
                 setState(() {
