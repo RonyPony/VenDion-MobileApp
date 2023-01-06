@@ -138,7 +138,7 @@ class _buildState extends State<SellScreen> {
               titleController.text = snapshot.data!.name!;
               selectedBrandName = snapshot.data!.brand!;
               yearController.text = snapshot.data!.year!;
-              selectedTags = snapshot.data!.features!;
+              // selectedTags = snapshot.data!.features!;
               // locationController.text = snapshot.data!.
             return Column(
               children: [
@@ -959,8 +959,9 @@ class _buildState extends State<SellScreen> {
                 modificationDate: DateTime.now().toString(),
                 condition: isNew ? "Nuevo" : "Usado",
                 description: descriptionController.text,
-                features: selectedTags,
+                features: selectedTags.toString(),
                 isEnabled: true,
+                
                 name: titleController.text,
                 price: int.parse(priceController.text),
                 registerDate: DateTime.now().toString(),

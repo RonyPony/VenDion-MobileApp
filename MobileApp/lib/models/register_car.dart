@@ -3,7 +3,7 @@ class RegisterCar {
   bool? isEnabled;
   bool? isPublished;
   bool? isOffer;
-  List<String>? features;
+  String? features;
   int? price;
   String? contactPhoneNumber;
   String? name;

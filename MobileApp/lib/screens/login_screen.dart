@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     if (kDebugMode) {
       _userController.text = "ronel.cruz.a8@gmail.com";
-      _passController.text = "ronel0808";  
+      _passController.text = "ronel08";  
     }
     
   }

@@ -26,15 +26,15 @@ class _VehicleDetailsState extends State<VehicleDetails> {
   Vehicle _carInfo = Vehicle();
   String currentPhotoFromGallery = "";
   bool isFavorite = false;
-
   bool addingToFavorite = false;
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments! as Vehicle;
-
     _carInfo = args;
+    // if(_carInfo.features==null){
+    //   _carInfo.features!.add("No Features for this vehicle");
+    // }
     final provider = Provider.of<VehiclesProvider>(context, listen: false);
-
     Future<VehiclePhoto> _carPhoto = provider.getVechiclePhoto(_carInfo.id!);
     Future<List<VehiclePhoto>> _carGallery =
         provider.getVechicleGallery(_carInfo.id!);
@@ -53,7 +53,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
             _buildTitle(),
             _buildDescription(),
             _buildFeatures(),
-            _buildOptions(),
+            _buildOptions(_carInfo.location!),
             FutureBuilder<Widget>(
               future: _buildAdd2FavBtn(),
               builder: (context, snapshot) {
@@ -362,19 +362,26 @@ class _VehicleDetailsState extends State<VehicleDetails> {
   }
 
   _buildFeatures() {
+    List<String> features = [];
+    for (String feature in _carInfo.features!.split(',')) {
+      features.add(feature);
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 20, left: 20),
       child: Column(
         children: [
           Row(
             children: [
-              _carInfo.features!.length > 2
-                  ? Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 25,
-                      color: Color(0xffff5b00),
-                    )
-                  : SizedBox(),
+              // _carInfo.features!.length > 2
+              //     ? Icon(
+              //         Icons.arrow_back_ios_new_rounded,
+              //         size: 25,
+              //         color: Color(0xffff5b00),
+              //       )
+              //     : SizedBox(),
+              
+              
+              
               // SizedBox(width: MediaQuery.of(context).size.width*.8,),
               Container(
                 // color: Colors.red,
@@ -382,9 +389,10 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                 width: MediaQuery.of(context).size.width * .8,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _carInfo.features!.length,
+                  itemCount: features.length,
                   itemBuilder: (BuildContext context, int index) {
-                    return aFeature(_carInfo.features![index]);
+                    
+                    return aFeature(features[index].replaceAll('[','').replaceAll(']', ''));
                   },
                 ),
               ),
@@ -453,7 +461,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
     );
   }
 
-  _buildOptions() {
+  _buildOptions(String location) {
     return Opacity(
       opacity: .5,
       child: Padding(
@@ -461,7 +469,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
         child: Column(
           children: [
             Row(
-              // mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Row(
                   children: [
@@ -475,25 +483,25 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                   width: MediaQuery.of(context).size.width * .14,
                 ),
                 Row(
-                  children: [Icon(Icons.car_rental), Text("Car Details")],
+                  children: [Icon(Icons.car_rental), Text("Detalles del vehiculo")],
                 ),
               ],
             ),
             SizedBox(height: 10),
             Row(
-              // mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Row(
                   children: [
                     Icon(Icons.location_on),
-                    Text("Santo Domingo Este")
+                    Text(location,)
                   ],
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * .05,
                 ),
                 Row(
-                  children: [Icon(Icons.attach_money), Text("Financiamiento")],
+                  children: [Icon(Icons.attach_money), Text("Financiamiento Disponible")],
                 ),
               ],
             )

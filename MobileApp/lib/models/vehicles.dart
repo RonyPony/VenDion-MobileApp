@@ -3,7 +3,7 @@ class Vehicle {
   int? createdBy;
   bool? isEnabled;
   bool? isPublished;
-  List<String>? features;
+  String? features;
   int? price;
   String? contactPhoneNumber;
   String? name;
@@ -17,6 +17,7 @@ class Vehicle {
   String? vim;
   String? condition;
   bool? isFavorite;
+  String? location;
 
   Vehicle(
       {this.id,
@@ -36,6 +37,7 @@ class Vehicle {
       this.year,
       this.isFavorite,
       this.vim,
+      this.location,
       this.condition});
 
   Vehicle.fromJson(Map<String, dynamic> json) {
@@ -43,7 +45,7 @@ class Vehicle {
     createdBy = json['createdBy'];
     isEnabled = json['isEnabled'];
     isPublished = json['isPublished'];
-    // features = json['features'].cast<String>();
+    features = json['features'];//.cast<String>();
     price = json['price'];
     contactPhoneNumber = json['contactPhoneNumber'];
     name = json['name'];
@@ -55,6 +57,7 @@ class Vehicle {
     model = json['model'];
     year = json['year'];
     vim = json['vim'];
+    location=json['location'];
     condition = json['condition'];
   }
 
@@ -64,7 +67,7 @@ class Vehicle {
     data['createdBy'] = this.createdBy;
     data['isEnabled'] = this.isEnabled;
     data['isPublished'] = this.isPublished;
-    // data['features'] = this.features;
+    data['features'] = this.features;
     data['price'] = this.price;
     data['contactPhoneNumber'] = this.contactPhoneNumber;
     data['name'] = this.name;
@@ -76,6 +79,7 @@ class Vehicle {
     data['model'] = this.model;
     data['year'] = this.year;
     data['vim'] = this.vim;
+    data['location']=this.location;
     data['condition'] = this.condition;
     return data;
   }
