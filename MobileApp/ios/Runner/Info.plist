@@ -14,6 +14,8 @@
 		<string>6.0</string>
 		<key>CFBundleName</key>
 		<string>vendion</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Para poder acceder a tus fotos y subir imagenes de los coches</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>

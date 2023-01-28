@@ -12,6 +12,7 @@ import 'package:vendion/screens/car_details_screen.dart';
 import 'package:vendion/services/user_service.dart';
 
 import '../models/photo.dart';
+import '../widgets/bottom_menu.dart';
 import '../widgets/drawer.dart';
 import '../widgets/search_section.dart';
 import 'notifications_screen.dart';
@@ -57,21 +58,32 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
         ),
       ),
       backgroundColor: Colors.white,
-      body: FutureBuilder<Widget>(
-        future: _buildMyVehicles(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return LinearProgressIndicator(color: Colors.grey,backgroundColor: Colors.white,);
-          }
-          if (snapshot.hasError) {
-            return Text("Error Loading Vehicles");
-          }
-          if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-            return snapshot.data!;
-          }
+      body: Stack(
+        children: [
+          FutureBuilder<Widget>(
+            future: _buildMyVehicles(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return LinearProgressIndicator(
+                  color: Colors.grey,
+                  backgroundColor: Colors.white,
+                );
+              }
+              if (snapshot.hasError) {
+                return Text("Error Loading Vehicles");
+              }
+              if (snapshot.connectionState == ConnectionState.done &&
+                  snapshot.hasData) {
+                return snapshot.data!;
+              }
 
-          return Text("Not Vehicles Found");
-        },
+              return Text("Not Vehicles Found");
+            },
+          ),
+          BottomMenu(
+            currentIndex: 2,
+          ),
+        ],
       ),
     );
   }
@@ -84,7 +96,6 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
     List<Vehicle> userVehicles = await provider.getVehiclesByUser(user.id!);
 
     return ListView.builder(
-      
       itemCount: userVehicles.length,
       itemBuilder: (context, index) {
         Future<Photo> carImage = photoProvider.getVehiclePicture(userVehicles[index].id!);
@@ -98,6 +109,7 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
               return Text("Error loading");
             }
             if (snapshot.connectionState ==ConnectionState.done && snapshot.hasData) {
+             
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: GestureDetector(
@@ -105,9 +117,9 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
                     Navigator.pushNamed(context, VehicleDetails.routeName,arguments: userVehicles[index]);
                   },
                   child: ListTile(
-                    leading: Image.memory(base64Decode(snapshot.data!.image!)),
+                    // leading: Image.memory(base64Decode(snapshot.data!.image!)),
                     title: Text(userVehicles[index].name!),
-                    subtitle: Text(userVehicles[index].description!.substring(0,20)+"..."),
+                    subtitle: Text(userVehicles[index].description!),//.substring(0,20)+"..."),
                     trailing: Icon(Icons.arrow_forward_ios_rounded,color: Colors.orange,),
                   ),
                 ),

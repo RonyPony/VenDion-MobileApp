@@ -50,7 +50,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
         child: Column(
           children: [
             _buildGallery(_carPhoto, _carGallery),
-            _buildTitle(),
+            _buildTitleBuilder(),
             _buildDescription(),
             _buildFeatures(),
             _buildOptions(_carInfo.location!),
@@ -262,7 +262,13 @@ class _VehicleDetailsState extends State<VehicleDetails> {
     );
   }
 
-  _buildTitle() {
+  Future<Widget>_buildTitle() async {
+        final prov = Provider.of<VehiclesProvider>(context, listen: false);
+    final authProvider =
+        Provider.of<AuthenticationProvider>(context, listen: false);
+    UserResponse usr = await authProvider.getCurrentUser();
+    bool isFavorite = await prov.isFavorite(_carInfo.id!, usr.id!);
+
     return Column(
       children: [
         Row(
@@ -295,14 +301,17 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                 ),
               ),
             ),
+            
             SizedBox(width: 6.55),
+            isFavorite?
             Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Icon(
                 Icons.star_rounded,
                 color: Color(0xffff5b00),
               ),
-            )
+            ):
+            SizedBox()
           ],
         ),
         Row(
@@ -554,7 +563,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                   mainBtn: true,
                   onTap: () {},
                   enable: true,
-                  text: "Buy Now",
+                  text: "Me interesa",
                 ),
               ),
             );
@@ -657,5 +666,25 @@ class _VehicleDetailsState extends State<VehicleDetails> {
               ),
             ),
           );
+  }
+  
+  _buildTitleBuilder() {
+    return FutureBuilder<Widget>(
+              future: _buildTitle(),
+              builder: (context, snapshot) {
+                if(snapshot.connectionState == ConnectionState.waiting){
+                  return SizedBox();
+                }
+                if(snapshot.hasError){
+                  return Text("An Error was found");
+                }
+
+                if(snapshot.connectionState == ConnectionState.done && snapshot.hasData){
+                  return snapshot.data!;
+                }
+
+                return Text("No info");
+              },
+            );
   }
 }

@@ -138,6 +138,17 @@ class _buildState extends State<SellScreen> {
               titleController.text = snapshot.data!.name!;
               selectedBrandName = snapshot.data!.brand!;
               yearController.text = snapshot.data!.year!;
+              locationController.text = snapshot.data!.location!;
+              priceController.text = snapshot.data!.price!.toString();
+              descriptionController.text = snapshot.data!.description!;
+              featuresController.text =snapshot.data!.features!;
+              contactNumber.text =snapshot.data!.contactPhoneNumber!;
+                      _carBrandsName = [snapshot.data!.brand!];
+                      _carModelName = [snapshot.data!.model!];
+              isNew = snapshot.data!.condition == "Nuevo";
+                      
+                      // photoList = ;
+
               // selectedTags = snapshot.data!.features!;
               // locationController.text = snapshot.data!.
             return Column(
@@ -312,7 +323,7 @@ class _buildState extends State<SellScreen> {
         child: Row(
           children: [
             Radio(
-              value: 1,
+              value: isNew?0:1,
               activeColor: Color(0xffff5b00),
               groupValue: _condition,
               onChanged: (int? value) {
@@ -327,7 +338,8 @@ class _buildState extends State<SellScreen> {
               width: 0,
             ),
             Radio(
-              value: 0,
+              value: isNew?1:0,
+              
               activeColor: Color(0xffff5b00),
               groupValue: _condition,
               onChanged: (int? value) {
