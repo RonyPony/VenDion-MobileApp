@@ -67,35 +67,35 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        body:  Stack(
+        body: Stack(
           children: [
             SingleChildScrollView(
-              
               child: Column(
                 children: [
                   _buildSearchSection(),
                   _buildCarrouser(),
                   FutureBuilder<Widget>(
                     future: _buildRecommendedSection(
-                      MediaQuery.of(context).size.width * .30),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasError) {
-                          return Text("Error ");
-                        }
+                        MediaQuery.of(context).size.width * .30),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Text("Error ");
+                      }
 
-                        if (!snapshot.hasData) {
-                          return Text("No data found");
-                        }
+                      if (!snapshot.hasData) {
+                        return Text("No data found");
+                      }
 
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return CircularProgressIndicator();
-                        }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      }
 
-                        if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
-                          return snapshot.data!;
-                        }
-                        return Text("no data");
-                      },
+                      if (snapshot.hasData &&
+                          snapshot.connectionState == ConnectionState.done) {
+                        return snapshot.data!;
+                      }
+                      return Text("no data");
+                    },
                   ),
                   SizedBox(
                     height: MediaQuery.of(context).size.height * .15,
@@ -110,10 +110,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
   }
 
-  Future<Widget>_buildRecommendedSection(double ancho) async {
+  Future<Widget> _buildRecommendedSection(double ancho) async {
     final vehicleProvider =
         Provider.of<VehiclesProvider>(context, listen: false);
-    final authProv = Provider.of<AuthenticationProvider>(context,listen: false);
+    final authProv =
+        Provider.of<AuthenticationProvider>(context, listen: false);
     UserResponse usr = await authProv.getCurrentUser();
     Future<List<Vehicle>> _allVehicles =
         vehicleProvider.getAllAvailableVehicles(usr.id!);
@@ -158,7 +159,8 @@ class _HomeScreenState extends State<HomeScreen> {
           FutureBuilder<List<Vehicle>>(
             future: _allVehicles,
             builder: (context, vehicleListSnapshot) {
-              if (vehicleListSnapshot.connectionState == ConnectionState.waiting) {
+              if (vehicleListSnapshot.connectionState ==
+                  ConnectionState.waiting) {
                 return CircularProgressIndicator(color: Color(0xffff5b00));
               }
               if (vehicleListSnapshot.hasError) {
@@ -171,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   shrinkWrap: true,
                   // primary: true,
                   // physics:  ClampingScrollPhysics(),
-                  physics:  NeverScrollableScrollPhysics(),
+                  physics: NeverScrollableScrollPhysics(),
                   itemCount: vehicleListSnapshot.data!.length,
                   itemBuilder: (context, index) {
                     Vehicle project = vehicleListSnapshot.data![index];
@@ -181,14 +183,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Future<UserResponse> currentUser =
                         authProvider.getCurrentUser();
 
-                     if (!project.isOffer!) {
-                        return Padding(
+                    if (!project.isOffer!) {
+                      return Padding(
                         padding: const EdgeInsets.only(top: 20),
                         child: _buildaRecommended(project, vehicleProvider),
                       );
-                     }else{
+                    } else {
                       return SizedBox();
-                     }
+                    }
                   },
                 );
               }
@@ -312,7 +314,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _buildCarrouser() {
-    final vehicleProvider = Provider.of<VehiclesProvider>(context,listen: false);
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
     Future<List<Vehicle>> offers = vehicleProvider.getAllOfferVehicle();
     return FutureBuilder<List<Vehicle>>(
       future: offers,
@@ -326,7 +329,8 @@ class _HomeScreenState extends State<HomeScreen> {
         if (snapshot.hasError) {
           return Text("Error");
         }
-        if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+        if (snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.done) {
           return Padding(
             padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
             child: Carrousel(snapshot.data!),
@@ -342,13 +346,16 @@ class _HomeScreenState extends State<HomeScreen> {
     bool hasVideo = true;
     bool liked = vehicle.isFavorite!;
     Future<VehiclePhoto> _carPhoto = provider.getVechiclePhoto(vehicle.id!);
-    
+
     return Container(
-      padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * .04,right: MediaQuery.of(context).size.width * .04),
+      padding: EdgeInsets.only(
+          left: MediaQuery.of(context).size.width * .04,
+          right: MediaQuery.of(context).size.width * .04),
       // color: Colors.red.withOpacity(.5),
       child: GestureDetector(
         onTap: () {
-          Navigator.pushNamed(context, VehicleDetails.routeName,arguments: vehicle);
+          Navigator.pushNamed(context, VehicleDetails.routeName,
+              arguments: vehicle);
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -360,13 +367,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                  
                     children: [
-                      CircularProgressIndicator(color: Color(0xffff5b00),),
+                      CircularProgressIndicator(
+                        color: Color(0xffff5b00),
+                      ),
                     ],
                   );
                 }
-                if (snapshot.hasError) {
+                if (snapshot.hasError || snapshot.data!.image == null) {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -407,17 +415,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? Padding(
                               padding: EdgeInsets.only(
                                   top: 10,
-                                  left: MediaQuery.of(context).size.width * .75),
+                                  left:
+                                      MediaQuery.of(context).size.width * .75),
                               child: GestureDetector(
                                   onTap: () {
                                     print("Liked ${vehicle.name}");
                                   },
-                                  child:
-                                      SvgPicture.asset("assets/liked.svg")),
+                                  child: SvgPicture.asset("assets/liked.svg")),
                             )
                           : Padding(
-                              padding:
-                                   EdgeInsets.only(top: 10, left: MediaQuery.of(context).size.width * .75),
+                              padding: EdgeInsets.only(
+                                  top: 10,
+                                  left:
+                                      MediaQuery.of(context).size.width * .75),
                               child: SvgPicture.asset(
                                 "assets/notliked.svg",
                                 width: 26,

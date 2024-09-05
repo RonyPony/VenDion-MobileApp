@@ -29,8 +29,8 @@ class VehicleService implements VehiclesContract {
         //   element.isFavorite=true;
         // });
         for (Vehicle vehi in dataResponse) {
-          bool isFav =await isFavorite(vehi.id!, userId);
-            vehi.isFavorite=isFav;
+          bool isFav = await isFavorite(vehi.id!, userId);
+          vehi.isFavorite = isFav;
         }
         return dataResponse;
       } else {
@@ -64,7 +64,8 @@ class VehicleService implements VehiclesContract {
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
-          return dataResponse!;
+          VehiclePhoto photo = VehiclePhoto();
+          return photo;
         } else {
           return dataResponse!;
         }
@@ -206,7 +207,7 @@ class VehicleService implements VehiclesContract {
       return false;
     }
   }
-  
+
   @override
   Future<bool> removeFromFavorites(int carId, int userId) async {
     Response? response;
@@ -242,11 +243,12 @@ class VehicleService implements VehiclesContract {
     Response? response;
     List<FavoriteVehicle>? dataResponse;
     try {
-      response = await client.get('api/vehicle/getFavorites/'+userId.toString());
+      response =
+          await client.get('api/vehicle/getFavorites/' + userId.toString());
       if (response.statusCode == 200) {
         dataResponse = List<FavoriteVehicle>.from(
             response.data.map((model) => FavoriteVehicle.fromJson(model)));
-        
+
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
@@ -266,17 +268,19 @@ class VehicleService implements VehiclesContract {
       return dataResponse!;
     }
   }
-  
+
   @override
   Future<Vehicle> getVehicleInfo(int vehicleId) async {
     Response? response;
     Vehicle? dataResponse;
-    if(vehicleId == 0){return Vehicle();}
+    if (vehicleId == 0) {
+      return Vehicle();
+    }
     try {
-      response = await client.get('api/vehicle/'+vehicleId.toString());
+      response = await client.get('api/vehicle/' + vehicleId.toString());
       if (response.statusCode == 200) {
         dataResponse = Vehicle.fromJson(response.data);
-       
+
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
@@ -296,17 +300,15 @@ class VehicleService implements VehiclesContract {
       return dataResponse!;
     }
   }
-  
+
   @override
   Future<int> sellVehicle(RegisterCar vehicle) async {
-   Response? response;
+    Response? response;
     bool dataResponse;
     var jsonedData = vehicle.toJson();
     try {
-      response = await client.post('api/vehicle',data: 
-        jsonedData
-      );
-      if (response.statusCode == 200 || response.statusCode == 201 ) {
+      response = await client.post('api/vehicle', data: jsonedData);
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data["id"];
       } else {
         if (response.statusCode == 404) {
@@ -379,7 +381,7 @@ class VehicleService implements VehiclesContract {
       return models;
     }
   }
-  
+
   @override
   Future<List<Vehicle>> getVehiclesByUser(int userId) async {
     Response? response;
@@ -395,8 +397,8 @@ class VehicleService implements VehiclesContract {
         //   element.isFavorite=true;
         // });
         for (Vehicle vehi in dataResponse) {
-          bool isFav =await isFavorite(vehi.id!, userId);
-            vehi.isFavorite=isFav;
+          bool isFav = await isFavorite(vehi.id!, userId);
+          vehi.isFavorite = isFav;
         }
         return dataResponse;
       } else {
