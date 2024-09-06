@@ -104,7 +104,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                   //   ),
                   // );
                 }
-                if (snapshot.hasError) {
+                if (snapshot.hasError || snapshot.data!.image == null) {
                   return Padding(
                     padding: EdgeInsets.only(
                         left: MediaQuery.of(context).size.width * .2),
@@ -262,13 +262,13 @@ class _VehicleDetailsState extends State<VehicleDetails> {
     );
   }
 
-  Future<Widget>_buildTitle() async {
-        final prov = Provider.of<VehiclesProvider>(context, listen: false);
+  Future<Widget> _buildTitle() async {
+    final prov = Provider.of<VehiclesProvider>(context, listen: false);
     final authProvider =
         Provider.of<AuthenticationProvider>(context, listen: false);
     UserResponse usr = await authProvider.getCurrentUser();
     bool isFavorite = await prov.isFavorite(_carInfo.id!, usr.id!);
-
+    Size size = MediaQuery.of(context).size;
     return Column(
       children: [
         Row(
@@ -286,8 +286,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
               ),
             ),
             SizedBox(
-              width: MediaQuery.of(context).size.width * .4 -
-                  _carInfo.name!.length * 5,
+              width: size.width * .4 - _carInfo.name!.length * 5,
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20),
@@ -301,17 +300,16 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                 ),
               ),
             ),
-            
             SizedBox(width: 6.55),
-            isFavorite?
-            Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: Icon(
-                Icons.star_rounded,
-                color: Color(0xffff5b00),
-              ),
-            ):
-            SizedBox()
+            isFavorite
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Icon(
+                      Icons.star_rounded,
+                      color: Color(0xffff5b00),
+                    ),
+                  )
+                : SizedBox()
           ],
         ),
         Row(
@@ -388,9 +386,7 @@ class _VehicleDetailsState extends State<VehicleDetails> {
               //         color: Color(0xffff5b00),
               //       )
               //     : SizedBox(),
-              
-              
-              
+
               // SizedBox(width: MediaQuery.of(context).size.width*.8,),
               Container(
                 // color: Colors.red,
@@ -400,8 +396,9 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                   scrollDirection: Axis.horizontal,
                   itemCount: features.length,
                   itemBuilder: (BuildContext context, int index) {
-                    
-                    return aFeature(features[index].replaceAll('[','').replaceAll(']', ''));
+                    return aFeature(features[index]
+                        .replaceAll('[', '')
+                        .replaceAll(']', ''));
                   },
                 ),
               ),
@@ -492,7 +489,10 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                   width: MediaQuery.of(context).size.width * .14,
                 ),
                 Row(
-                  children: [Icon(Icons.car_rental), Text("Detalles del vehiculo")],
+                  children: [
+                    Icon(Icons.car_rental),
+                    Text("Detalles del vehiculo")
+                  ],
                 ),
               ],
             ),
@@ -503,14 +503,19 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                 Row(
                   children: [
                     Icon(Icons.location_on),
-                    Text(location,)
+                    Text(
+                      location,
+                    )
                   ],
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * .05,
                 ),
                 Row(
-                  children: [Icon(Icons.attach_money), Text("Financiamiento Disponible")],
+                  children: [
+                    Icon(Icons.attach_money),
+                    Text("Financiamiento Disponible")
+                  ],
                 ),
               ],
             )
@@ -545,7 +550,8 @@ class _VehicleDetailsState extends State<VehicleDetails> {
                   //   content: Text(
                   //       "En estos momentos no puedes editar este vehiculo, intentalo mas tarde"),
                   // ));
-                  Navigator.pushNamed(context, SellScreen.routeName, arguments: _carInfo.id);
+                  Navigator.pushNamed(context, SellScreen.routeName,
+                      arguments: _carInfo.id);
                 },
                 enable: true,
                 text: "Editar Vehiculo",
@@ -667,24 +673,25 @@ class _VehicleDetailsState extends State<VehicleDetails> {
             ),
           );
   }
-  
+
   _buildTitleBuilder() {
     return FutureBuilder<Widget>(
-              future: _buildTitle(),
-              builder: (context, snapshot) {
-                if(snapshot.connectionState == ConnectionState.waiting){
-                  return SizedBox();
-                }
-                if(snapshot.hasError){
-                  return Text("An Error was found");
-                }
+      future: _buildTitle(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox();
+        }
+        if (snapshot.hasError) {
+          return Text("An Error was found");
+        }
 
-                if(snapshot.connectionState == ConnectionState.done && snapshot.hasData){
-                  return snapshot.data!;
-                }
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          return snapshot.data!;
+        }
 
-                return Text("No info");
-              },
-            );
+        return Text("No info");
+      },
+    );
   }
 }

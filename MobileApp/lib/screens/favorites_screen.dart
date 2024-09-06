@@ -173,23 +173,29 @@ class _StateFavoriteScreen extends State<FavoriteScreen> {
     bool hasVideo = true;
     if (vehiclesList.length == 0) {
       return Padding(
-        padding:  EdgeInsets.only(top: MediaQuery.of(context).size.height/4.5),
+        padding: EdgeInsets.only(top: MediaQuery.of(context).size.height / 4.5),
         child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.star_rounded,size: 95,color: Color(0xffff5b00).withOpacity(.5),),
+                Icon(
+                  Icons.star_rounded,
+                  size: 95,
+                  color: Color(0xffff5b00).withOpacity(.5),
+                ),
               ],
             ),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("No has agregado nada a favoritos",style: TextStyle(fontSize: 20,color: Color(0xffff5b00).withOpacity(.5)),),
+                Text(
+                  "No has agregado nada a favoritos",
+                  style: TextStyle(
+                      fontSize: 20, color: Color(0xffff5b00).withOpacity(.5)),
+                ),
               ],
             )
-            
           ],
         ),
       );
@@ -234,7 +240,7 @@ class _StateFavoriteScreen extends State<FavoriteScreen> {
                             ],
                           );
                         }
-                        if (snapshot.hasError) {
+                        if (snapshot.hasError || snapshot.data!.image == null) {
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
