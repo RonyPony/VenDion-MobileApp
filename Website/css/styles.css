@@ -14,6 +14,7 @@ html {
 :root {
   --primary-color: #FF5C00;
   --white: #ffff;
+  --vendionbg:lightslategray;
   --black: #0000;
   --primary-font: "Poppins", sans-serif;
 }
@@ -24,6 +25,7 @@ body {
   font-family: var(--primary-font);
   font-size: 1.6rem;
   line-height: 1.8;
+  background-color: var(--vendionbg);
 }
 
 h1,
@@ -35,10 +37,12 @@ h3 {
 
 h1 {
   font-size: 5rem;
+  color: var(--white);
 }
 
 h2 {
   font-size: 4.6rem;
+  color: var(--white);
 }
 
 h3 {
@@ -222,6 +226,7 @@ img {
   margin-bottom: 5rem;
   transition-property: transform;
   transition-duration: 0.3s;
+  border-radius: 10px;
 }
 
 .list__element:hover {
@@ -376,6 +381,7 @@ img {
   background-size: 3rem;
   padding: 2rem;
   margin-bottom: 2rem;
+  border-radius: 10px;
   box-shadow: 0px 0px 15px 3px rgb(0 0 0 / 0.15);
 }
 
