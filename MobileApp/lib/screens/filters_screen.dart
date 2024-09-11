@@ -4,7 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/Picker.dart';
+import 'package:provider/provider.dart';
 import 'package:vendion/models/brands.dart';
+import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/widgets/brandModelSelector.dart';
 
 import '../models/models.dart';
@@ -213,15 +215,14 @@ class _StateFilterScreen extends State<FiltersScreen> {
             snapshot.connectionState == ConnectionState.done) {
           snapshot.data!.forEach(
             (element) {
-              _carBrandsName.add(element!.makeName!);
+              _carBrandsName.add(element.name!);
             },
           );
           return BrandModelSelector(
-            selectedBrand: selectedBrandName,
-            selectedModel: selectedBrandModel,
-            brands: _carBrandsName,
-            models: _carModelName
-            );
+              selectedBrand: selectedBrandName,
+              selectedModel: selectedBrandModel,
+              brands: _carBrandsName,
+              models: _carModelName);
           // return Row(
           //   mainAxisAlignment: MainAxisAlignment.center,
           //   children: [
@@ -283,28 +284,14 @@ class _StateFilterScreen extends State<FiltersScreen> {
   }
 
   Future<List<Brand>> getBrands() async {
-    List<Brand> marcas = [];
-    try {
-      var response = await Dio().get(
-          'https://vpic.nhtsa.dot.gov/api/vehicles/getallmakes?format=json');
-      print(response);
-      for (Map<String, dynamic> data in response.data["Results"]) {
-        print(data);
-
-        Brand newBrand =
-            Brand(makeID: data["Make_ID"], makeName: data["Make_Name"]);
-
-        marcas.add(newBrand);
-      }
-      //  marcas = response.data["Results"].map((model) => Brand.fromJson(model)).toList();
-
-      print(marcas);
-      return marcas;
-    } catch (e) {
-      print(e);
-      return marcas;
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    List<Brand> response = await vehicleProvider.getBrands();
+    _carBrandsName.clear();
+    for (Brand brand in response) {
+      _carBrandsName.add(brand.name!);
     }
-    // _carBrandsName
+    return response;
   }
 
   Future<List<Model>> getModels(String makeName) async {

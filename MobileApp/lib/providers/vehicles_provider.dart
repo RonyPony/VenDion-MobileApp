@@ -47,8 +47,8 @@ class VehiclesProvider with ChangeNotifier {
     return result;
   }
 
-  Future<bool> addToFavorite(int carId,int userId) async {
-    final result = await _vehiclesContract.addToFavorites(carId,userId);
+  Future<bool> addToFavorite(int carId, int userId) async {
+    final result = await _vehiclesContract.addToFavorites(carId, userId);
     return result;
   }
 
@@ -66,13 +66,14 @@ class VehiclesProvider with ChangeNotifier {
     final response = await _vehiclesContract.sellVehicle(vehicle);
     return response;
   }
+
   Future<List<Brand>> getBrands() async {
-    final response  = await _vehiclesContract.getBrands();
+    final response = await _vehiclesContract.getBrands();
     return response;
   }
 
-  Future<List<Model>> getModels(String brandName) async {
-    final response = await _vehiclesContract.getModels(brandName);
+  Future<List<Model>> getModels(int brandId) async {
+    final response = await _vehiclesContract.getModels(brandId);
     return response;
   }
 }

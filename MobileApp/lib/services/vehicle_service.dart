@@ -333,14 +333,17 @@ class VehicleService implements VehiclesContract {
   Future<List<Brand>> getBrands() async {
     List<Brand> marcas = [];
     try {
-      var response = await Dio().get(
-          'https://vpic.nhtsa.dot.gov/api/vehicles/getallmakes?format=json');
+      // var response = await Dio().get('https://vpic.nhtsa.dot.gov/api/vehicles/getallmakes?format=json');
+      var response = await client.get('api/vehicle/makes');
       print(response);
-      for (Map<String, dynamic> data in response.data["Results"]) {
+      for (Map<String, dynamic> data in response.data) {
         print(data);
 
-        Brand newBrand =
-            Brand(makeID: data["Make_ID"], makeName: data["Make_Name"]);
+        Brand newBrand = Brand(
+            id: data["id"],
+            isEnabled: data["isEnabled"],
+            logoUrl: data["logoUrl"],
+            name: data["name"]);
 
         marcas.add(newBrand);
       }

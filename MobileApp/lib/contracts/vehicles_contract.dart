@@ -13,12 +13,12 @@ abstract class VehiclesContract {
   Future<List<FavoriteVehicle>> getAllFavoriteVehicles(int userId);
   Future<List<Vehicle>> getAllOfferVehicles();
   Future<VehiclePhoto> getVehiclePhoto(int id);
-  Future<List<VehiclePhoto>>getVehicleGallery(int id);
-  Future<bool>isFavorite(int carId,int userId);
-  Future<bool>addToFavorites(int carId,int userId);
+  Future<List<VehiclePhoto>> getVehicleGallery(int id);
+  Future<bool> isFavorite(int carId, int userId);
+  Future<bool> addToFavorites(int carId, int userId);
   Future<bool> removeFromFavorites(int carId, int userId);
-  Future<int>sellVehicle(RegisterCar vehicle);
+  Future<int> sellVehicle(RegisterCar vehicle);
   Future<List<Brand>> getBrands();
-  Future<List<Model>> getModels(String brandName);
-  Future<List<Vehicle>>getVehiclesByUser(int userId);
+  Future<List<Model>> getModels(int brandName);
+  Future<List<Vehicle>> getVehiclesByUser(int userId);
 }

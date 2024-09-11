@@ -64,7 +64,7 @@ class _buildState extends State<SellScreen> {
   List<String> _carModelName = ["Todos"];
   var brands;
   int selectedbrandId = 0;
-  String selectedBrandName = "";
+  Brand selectedBrand = Brand();
   String selectedBrandModel = "";
   bool posting = false;
   List<PhotoToUpload> photoList = [];
@@ -82,14 +82,14 @@ class _buildState extends State<SellScreen> {
   Widget build(BuildContext context) {
     var args;
     try {
-       args = ModalRoute.of(context)!.settings.arguments! as int;
-
+      args = ModalRoute.of(context)!.settings.arguments! as int;
     } catch (e) {
-      args=0;
+      args = 0;
     }
-    final vehicleProvider =Provider.of<VehiclesProvider>(context, listen: false);
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
     Future<Vehicle> vehicleInfo = vehicleProvider.getVehicleInfo(args);
-  editMode = args>0;
+    editMode = args > 0;
     return Scaffold(
       backgroundColor: Colors.white,
       // drawer: GeneralDrawer(),
@@ -120,73 +120,78 @@ class _buildState extends State<SellScreen> {
         ),
       ),
       body: SingleChildScrollView(
-          child: editMode? FutureBuilder<Vehicle>(
-        future: vehicleInfo,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Column(
-              children: [
-                LinearProgressIndicator(color: Colors.orange,backgroundColor: Colors.white,),
-                Text("Sincronizando informacion del vehiculo")
-              ],
-            );
-          }
-          if (snapshot.hasError) {
-            return Text("Error Loading info");
-          }
-          if (snapshot.connectionState == ConnectionState.done) {
-              titleController.text = snapshot.data!.name!;
-              selectedBrandName = snapshot.data!.brand!;
-              yearController.text = snapshot.data!.year!;
-              locationController.text = snapshot.data!.location!;
-              priceController.text = snapshot.data!.price!.toString();
-              descriptionController.text = snapshot.data!.description!;
-              featuresController.text =snapshot.data!.features!;
-              contactNumber.text =snapshot.data!.contactPhoneNumber!;
+          child: editMode
+              ? FutureBuilder<Vehicle>(
+                  future: vehicleInfo,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Column(
+                        children: [
+                          LinearProgressIndicator(
+                            color: Colors.orange,
+                            backgroundColor: Colors.white,
+                          ),
+                          Text("Sincronizando informacion del vehiculo")
+                        ],
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Text("Error Loading info");
+                    }
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      titleController.text = snapshot.data!.name!;
+                      selectedBrand = Brand(name: snapshot.data!.brand);
+                      yearController.text = snapshot.data!.year!;
+                      locationController.text = snapshot.data!.location!;
+                      priceController.text = snapshot.data!.price!.toString();
+                      descriptionController.text = snapshot.data!.description!;
+                      featuresController.text = snapshot.data!.features!;
+                      contactNumber.text = snapshot.data!.contactPhoneNumber!;
                       _carBrandsName = [snapshot.data!.brand!];
                       _carModelName = [snapshot.data!.model!];
-              isNew = snapshot.data!.condition == "Nuevo";
-                      
+                      isNew = snapshot.data!.condition == "Nuevo";
+
                       // photoList = ;
 
-              // selectedTags = snapshot.data!.features!;
-              // locationController.text = snapshot.data!.
-            return Column(
-              children: [
-                _buildLabel("Titulo"),
-                _splitter(.01),
-                _buildTitle(),
-                _splitter(.02),
-                _buildLabel("Marca y Modelo"),
-                _splitter(.01),
-                _buildBrandModel(),
-                _splitter(.02),
-                _buildConditionAndYear(),
-                _splitter(.02),
-                _buildLabel("Features"),
-                _buildSelectedTags(),
-                _splitter(.01),
-                _buildSearch(),
-                _buildTags(),
-                _splitter(.01),
-                _buildLocationAndPrice(),
-                _splitter(.02),
-                _buildLabel("Numero de contacto"),
-                _splitter(.01),
-                _buildNumber(),
-                _splitter(.02),
-                _buildLabel("Descripcion"),
-                _splitter(.01),
-                _buildDesription(),
-                _buildUploadPhotos(),
-                _buildSellBtn(),
-                _buildGoBackBtn()
-              ],
-            );
-          }
-          return Text("No info to load");
-        },
-      ): Column(
+                      // selectedTags = snapshot.data!.features!;
+                      // locationController.text = snapshot.data!.
+                      return Column(
+                        children: [
+                          _buildLabel("Titulo"),
+                          _splitter(.01),
+                          _buildTitle(),
+                          _splitter(.02),
+                          _buildLabel("Marca y Modelo"),
+                          _splitter(.01),
+                          _buildBrandModel(),
+                          _splitter(.02),
+                          _buildConditionAndYear(),
+                          _splitter(.02),
+                          _buildLabel("Features"),
+                          _buildSelectedTags(),
+                          _splitter(.01),
+                          _buildSearch(),
+                          _buildTags(),
+                          _splitter(.01),
+                          _buildLocationAndPrice(),
+                          _splitter(.02),
+                          _buildLabel("Numero de contacto"),
+                          _splitter(.01),
+                          _buildNumber(),
+                          _splitter(.02),
+                          _buildLabel("Descripcion"),
+                          _splitter(.01),
+                          _buildDesription(),
+                          _buildUploadPhotos(),
+                          _buildSellBtn(),
+                          _buildGoBackBtn()
+                        ],
+                      );
+                    }
+                    return Text("No info to load");
+                  },
+                )
+              : Column(
                   children: [
                     _buildLabel("Titulo"),
                     _splitter(.01),
@@ -217,8 +222,7 @@ class _buildState extends State<SellScreen> {
                     _buildSellBtn(),
                     _buildGoBackBtn()
                   ],
-                )
-      ),
+                )),
     );
   }
 
@@ -323,7 +327,7 @@ class _buildState extends State<SellScreen> {
         child: Row(
           children: [
             Radio(
-              value: isNew?0:1,
+              value: isNew ? 0 : 1,
               activeColor: Color(0xffff5b00),
               groupValue: _condition,
               onChanged: (int? value) {
@@ -338,8 +342,7 @@ class _buildState extends State<SellScreen> {
               width: 0,
             ),
             Radio(
-              value: isNew?1:0,
-              
+              value: isNew ? 1 : 0,
               activeColor: Color(0xffff5b00),
               groupValue: _condition,
               onChanged: (int? value) {
@@ -962,7 +965,7 @@ class _buildState extends State<SellScreen> {
                 Provider.of<PhotoProvider>(context, listen: false);
             UserResponse currentUser = await authProvider.getCurrentUser();
             RegisterCar vehicle = RegisterCar(
-                brand: selectedBrandName,
+                brand: selectedBrand.name,
                 contactPhoneNumber: contactNumber.text,
                 createdBy: currentUser.id,
                 isOffer: false,
@@ -973,7 +976,6 @@ class _buildState extends State<SellScreen> {
                 description: descriptionController.text,
                 features: selectedTags.toString(),
                 isEnabled: true,
-                
                 name: titleController.text,
                 price: int.parse(priceController.text),
                 registerDate: DateTime.now().toString(),
@@ -994,13 +996,13 @@ class _buildState extends State<SellScreen> {
                   productPresentationPicId = picId;
                 }
               }
-bool setted = false;
+              bool setted = false;
 
-              if(productPresentationPicId>0){
+              if (productPresentationPicId > 0) {
                 setted = await photoProvider
-                  .setProductMainPicture(productPresentationPicId);
-              }else{
-                setted=true;
+                    .setProductMainPicture(productPresentationPicId);
+              } else {
+                setted = true;
               }
 
               if (setted) {
@@ -1086,7 +1088,7 @@ bool setted = false;
     List<Brand> response = await vehicleProvider.getBrands();
     _carBrandsName.clear();
     for (Brand brand in response) {
-      _carBrandsName.add(brand.makeName!);
+      _carBrandsName.add(brand.name!);
     }
     return response;
   }
@@ -1103,7 +1105,7 @@ bool setted = false;
               options: _carBrandsName,
               onChange: (int x) async {
                 selectedbrandId = x;
-                selectedBrandName = _carBrandsName[x];
+                selectedBrand.name = _carBrandsName[x];
                 print("Selected ${_carBrandsName[x]}");
               },
             ),
@@ -1115,9 +1117,9 @@ bool setted = false;
                 // _carModelName
                 final vehicleProvider =
                     Provider.of<VehiclesProvider>(context, listen: false);
-                if (selectedBrandName != "" && selectedBrandName != "Todas") {
+                if (selectedBrand.name != "" && selectedBrand.name != "Todas") {
                   List<Model> x =
-                      await vehicleProvider.getModels(selectedBrandName);
+                      await vehicleProvider.getModels(selectedBrand.id!);
                   if (x.length > 0) {
                     _carModelName.clear();
                     for (Model modelo in x) {
@@ -1306,7 +1308,7 @@ bool setted = false;
       return false;
     }
 
-    if (selectedBrandName.isEmpty) {
+    if (selectedBrand.name!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: Duration(seconds: 10),
         // backgroundColor: Color(0xffff5b00).withOpacity(.5),
