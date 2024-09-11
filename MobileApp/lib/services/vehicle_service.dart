@@ -364,7 +364,7 @@ class VehicleService implements VehiclesContract {
   }
 
   @override
-  Future<List<Model>> getModels(String brandName) async {
+  Future<List<Model>> getModels(int brandName) async {
     List<Model> models = [];
     try {
       var response = await Dio().get(
