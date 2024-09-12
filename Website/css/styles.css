@@ -71,13 +71,20 @@ img {
   background-image: url(../img/header_bg.svg);
   background-repeat: no-repeat;
   background-position: top right;
-  background-size: 10rem;
+  background-size: 40rem;
   padding: 5rem 0;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 768px) {
   .header {
-    background-size: 55rem;
+    background-size: 40rem;
+  }
+  .header__navbar{
+    display: flex;
+    gap: 18rem;
+  }
+  .navigation__link{
+    color: white !important;
   }
 }
 
@@ -104,12 +111,21 @@ img {
     background-size: 120rem;
   }
 }
-
+/* iphone SE */
+@media (max-width: 375px){
+  h2{
+    font-size: 3rem !important;
+  }
+  .list__mumber{
+    font-size: 3rem !important;
+  }
+}
 @media (min-width: 768px) {
   .header__navbar {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    padding-bottom: 11rem;
   }
 }
 
@@ -171,7 +187,7 @@ img {
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 825px) {
   .header__image {
     max-width: 30rem;
     margin: 0 auto;
