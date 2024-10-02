@@ -33,21 +33,21 @@
             "name": "MobileApp (profile mode verbose)",
             "request": "launch",
             "type": "dart",
-            "args": ["v"],
+            "args": ["--verbose"],
             "flutterMode": "profile"
         },
         {
             "name": "MobileApp (release mode verbose)",
             "request": "launch",
             "type": "dart",
-            "args": ["v"],
+            "args": ["--verbose"],
             "flutterMode": "release"
         },
         {
             "name": "MobileApp (debug mode verbose)",
             "request": "launch",
             "type": "dart",
-            "args": ["v"],
+            "args": ["--verbose"],
             "flutterMode": "debug"
         }
     ]

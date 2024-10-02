@@ -1,24 +1,21 @@
 class Model {
   int? makeID;
-  String? makeName;
   int? modelID;
   String? modelName;
 
-  Model({this.makeID, this.makeName, this.modelID, this.modelName});
+  Model({this.makeID, this.modelID, this.modelName});
 
   Model.fromJson(Map<String, dynamic> json) {
-    makeID = json['Make_ID'];
-    makeName = json['Make_Name'];
-    modelID = json['Model_ID'];
-    modelName = json['Model_Name'];
+    makeID = json['brandId'];
+    modelID = json['id'];
+    modelName = json['name'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['Make_ID'] = this.makeID;
-    data['Make_Name'] = this.makeName;
-    data['Model_ID'] = this.modelID;
-    data['Model_Name'] = this.modelName;
+    data['brandId'] = this.makeID;
+    data['id'] = this.modelID;
+    data['name'] = this.modelName;
     return data;
   }
 }

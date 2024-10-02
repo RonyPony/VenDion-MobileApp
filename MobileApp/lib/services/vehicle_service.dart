@@ -364,13 +364,12 @@ class VehicleService implements VehiclesContract {
   }
 
   @override
-  Future<List<Model>> getModels(int brandName) async {
+  Future<List<Model>> getModels(int brandId) async {
     List<Model> models = [];
     try {
-      var response = await Dio().get(
-          'https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/$brandName?format=json');
+      var response = await client.get('api/vehicle/models/${brandId}');
       print(response);
-      for (Map<String, dynamic> data in response.data["Results"]) {
+      for (Map<String, dynamic> data in response.data) {
         print(data);
         Model newModel = Model.fromJson(data);
         models.add(newModel);

@@ -14,7 +14,7 @@ import '../widgets/main_button_widget.dart';
 import '../widgets/textBox_widget.dart';
 
 class LoginScreen extends StatefulWidget {
-  static String routeName="/loginScreen";
+  static String routeName = "/loginScreen";
 
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -26,35 +26,37 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _userController = TextEditingController();
 
   final TextEditingController _passController = TextEditingController();
-  
+
   bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildLogo(),
-            _buildTitle(),
-            _buildUserNameField(),
-            _buildPasswordField(),
-            _buildForgottenPassword(),
-            _buildLoginBtn(),
-            _buildRegister(),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildLogo(),
+              _buildTitle(),
+              _buildUserNameField(),
+              _buildPasswordField(),
+              _buildForgottenPassword(),
+              _buildLoginBtn(),
+              _buildRegister(),
+            ],
+          ),
         ),
       ),
     );
   }
+
   @override
   void initState() {
     super.initState();
     if (kDebugMode) {
       _userController.text = "ronel.cruz.a8@gmail.com";
-      _passController.text = "ronel08";  
+      _passController.text = "ronel08";
     }
-    
   }
 
   _buildLogo() {
@@ -110,7 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
     const String assetName = 'assets/user.svg';
     final Widget svg = SvgPicture.asset(assetName, semanticsLabel: 'Acme Logo');
     return Padding(
-        padding:  EdgeInsets.only(left: 20, right: 20, top: MediaQuery.of(context).size.height*.05),
+        padding: EdgeInsets.only(
+            left: 20, right: 20, top: MediaQuery.of(context).size.height * .05),
         child: CustomTextBox(
           onChange: () {},
           svg: svg,
@@ -155,23 +158,26 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.only(top: 30),
       child: CustomBtn(
         mainBtn: true,
-        enable:!_loading,
+        enable: !_loading,
         loadingText: "Validando...",
-        onTap:() async {
+        onTap: () async {
           setState(() {
             _loading = true;
           });
           String username = _userController.text;
           String pass = _passController.text;
-          final authProvider = Provider.of<AuthenticationProvider>(context,listen: false);
-          ClientUser userInfo = ClientUser(email: username,password: pass);          
-          UserResponse loggedin = await authProvider.authenticateUser(userInfo, true);
+          final authProvider =
+              Provider.of<AuthenticationProvider>(context, listen: false);
+          ClientUser userInfo = ClientUser(email: username, password: pass);
+          UserResponse loggedin =
+              await authProvider.authenticateUser(userInfo, true);
           if (!loggedin.hasError!) {
             Navigator.pushNamedAndRemoveUntil(
                 context, HomeScreen.routeName, (route) => false);
-          }else{
+          } else {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text("Ups, algo paso en el proceso, intentalo luego - ${loggedin.errorInfo}"),
+              content: Text(
+                  "Ups, algo paso en el proceso, intentalo luego - ${loggedin.errorInfo}"),
             ));
           }
           setState(() {
@@ -203,9 +209,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           GestureDetector(
-            onTap: (){
-              Navigator.pushNamed(
-                  context, RegisterScreen.routeName);
+            onTap: () {
+              Navigator.pushNamed(context, RegisterScreen.routeName);
             },
             child: Text(
               "Registrate",

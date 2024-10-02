@@ -62,8 +62,8 @@ class _buildState extends State<SellScreen> {
   List<String> selectedTags = [];
   List<String> _carBrandsName = ["Todas"];
   List<String> _carModelName = ["Todos"];
-  var brands;
-  int selectedbrandId = 0;
+  List<Brand> brands = [];
+
   Brand selectedBrand = Brand();
   String selectedBrandModel = "";
   bool posting = false;
@@ -75,7 +75,7 @@ class _buildState extends State<SellScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    getBrands();
+    loadBrands();
   }
 
   @override
@@ -1104,8 +1104,13 @@ class _buildState extends State<SellScreen> {
               placeHolder: "Marca:",
               options: _carBrandsName,
               onChange: (int x) async {
-                selectedbrandId = x;
                 selectedBrand.name = _carBrandsName[x];
+                selectedBrand.id = brands
+                    .where(
+                      (element) => element.name == _carBrandsName[x],
+                    )
+                    .first
+                    .id;
                 print("Selected ${_carBrandsName[x]}");
               },
             ),
@@ -1115,23 +1120,7 @@ class _buildState extends State<SellScreen> {
             child: GestureDetector(
               onTap: () async {
                 // _carModelName
-                final vehicleProvider =
-                    Provider.of<VehiclesProvider>(context, listen: false);
-                if (selectedBrand.name != "" && selectedBrand.name != "Todas") {
-                  List<Model> x =
-                      await vehicleProvider.getModels(selectedBrand.id!);
-                  if (x.length > 0) {
-                    _carModelName.clear();
-                    for (Model modelo in x) {
-                      _carModelName.add(modelo.modelName!);
-                    }
-
-                    if (_carModelName.length == 1) {
-                      selectedBrandModel = _carBrandsName.first;
-                    }
-                  }
-                  setState(() {});
-                }
+                loadModels(selectedBrand.id!);
               },
               child: Container(
                 padding: EdgeInsets.all(5),
@@ -1154,7 +1143,6 @@ class _buildState extends State<SellScreen> {
               placeHolder: "Modelo:",
               options: _carModelName,
               onChange: (int x) async {
-                selectedbrandId = x;
                 selectedBrandModel = _carModelName[x];
               },
             ),
@@ -1336,5 +1324,28 @@ class _buildState extends State<SellScreen> {
     }
 
     return true;
+  }
+
+  loadBrands() async {
+    brands = await getBrands();
+  }
+
+  loadModels(int brandId) async {
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    if (selectedBrand.name != "" && selectedBrand.name != "Todas") {
+      List<Model> x = await vehicleProvider.getModels(selectedBrand.id!);
+      if (x.length > 0) {
+        _carModelName.clear();
+        for (Model modelo in x) {
+          _carModelName.add(modelo.modelName!);
+        }
+
+        if (_carModelName.length == 1) {
+          selectedBrandModel = _carBrandsName.first;
+        }
+      }
+      setState(() {});
+    }
   }
 }
