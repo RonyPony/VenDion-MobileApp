@@ -1120,7 +1120,15 @@ class _buildState extends State<SellScreen> {
             child: GestureDetector(
               onTap: () async {
                 // _carModelName
-                loadModels(selectedBrand.id!);
+                if (selectedBrand.id == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    duration: Duration(seconds: 5),
+                    // backgroundColor: Color(0xffff5b00).withOpacity(.5),
+                    content: Text("Primero selecciona una marca"),
+                  ));
+                } else {
+                  loadModels(selectedBrand.id!);
+                }
               },
               child: Container(
                 padding: EdgeInsets.all(5),
@@ -1328,6 +1336,7 @@ class _buildState extends State<SellScreen> {
 
   loadBrands() async {
     brands = await getBrands();
+    // selectedBrand = brands[0];
   }
 
   loadModels(int brandId) async {
