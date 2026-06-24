@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/cli_commands.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/helpers/string_extensions.dart';
 import 'package:vendion/models/user_response.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/providers/auth_provider.dart';

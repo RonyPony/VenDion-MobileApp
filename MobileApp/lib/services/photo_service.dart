@@ -141,9 +141,9 @@ class PhotoService implements PhotoContract {
     );
 
     print(image.lengthSync());
-    print(result!.lengthSync());
+    print(await result!.length());
 
-    return result;
+    return File(result.path);
   }
   
   @override

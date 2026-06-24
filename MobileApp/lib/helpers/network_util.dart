@@ -25,7 +25,7 @@ class NetworkUtil {
   static Dio getClient() {
     final Dio dio = _createClient();
     dio.options.followRedirects = true;
-    dio.options.connectTimeout = 5000;
+    dio.options.connectTimeout = const Duration(seconds: 5);
     dio.options.validateStatus = (status) {
       return status! < 500;
     };
@@ -49,8 +49,8 @@ class NetworkUtil {
     String? apiName = EnvConfig.configs['serverurl'];
     Dio dio = Dio();
     dio.options.baseUrl = '${apiName}';
-    dio.options.connectTimeout = 20 * 3000;
-    dio.options.receiveTimeout = 30 * 3000;
+    dio.options.connectTimeout = const Duration(seconds: 60);
+    dio.options.receiveTimeout = const Duration(seconds: 90);
     dio.options.followRedirects = false;
     return dio;
   }
@@ -59,8 +59,8 @@ class NetworkUtil {
     String? apiName = EnvConfig.configs['serverurl'];
     Dio dio = Dio();
     dio.options.baseUrl = '${apiName}api/';
-    dio.options.connectTimeout = 20 * 3000;
-    dio.options.receiveTimeout = 30 * 3000;
+    dio.options.connectTimeout = const Duration(seconds: 60);
+    dio.options.receiveTimeout = const Duration(seconds: 90);
     dio.options.followRedirects = false;
     return dio;
   }
@@ -74,13 +74,14 @@ class _RequestInterceptor extends InterceptorsWrapper {
   _RequestInterceptor({required this.dio, required this.username, required this.password});
 
   @override
-  Future InterceptorsWrapper(RequestOptions options) async {
-    dio.lock();
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final token = await _getApiToken();
     options.headers['Authorization'] = 'Bearer $token';
     options.headers['Accept'] = 'application/json';
-    dio.unlock();
-    return options;
+    handler.next(options);
   }
 
   Future<String?> _getApiToken() async {
@@ -88,13 +89,13 @@ class _RequestInterceptor extends InterceptorsWrapper {
     String? token = sharedPreferences.getString(NetworkUtil.AUTH_TOKEN_KEY!);
     final dateStr = sharedPreferences.getString(NetworkUtil.AUTH_TOKEN_DATE!);
     if (token == null && dateStr == null) {
-      throw new PlatformException(message: 'Token expired', code: '401');
+      throw PlatformException(message: 'Token expired', code: '401');
     }
 
     final date = DateTime.parse(dateStr!);
     final difference = date.difference(DateTime.now()).inDays;
     if (difference > 2 || difference < -1)
-      throw new PlatformException(message: 'Token expired', code: '401');
+      throw PlatformException(message: 'Token expired', code: '401');
 
     return token;
   }

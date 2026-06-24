@@ -1220,7 +1220,7 @@ class _buildState extends State<SellScreen> {
       final photoProvider = Provider.of<PhotoProvider>(context, listen: false);
       UserResponse currentUser = await userProvider.getCurrentUser();
       ImagePicker imagePicker = ImagePicker();
-      final imageFile = await imagePicker.getImage(
+      final imageFile = await imagePicker.pickImage(
           source: ImageSource.gallery, imageQuality: 25);
       // File imagen = File(imageFile!.path);
       // String fileExt = getFileExtension(imagen.path);
