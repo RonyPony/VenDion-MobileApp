@@ -1,5 +1,3 @@
-
-  
 class UserLoginReponse {
   int? id;
   int? countryId;

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:vendion/config/app_constants.dart';
+import 'package:vendion/l10n/app_localizations.dart';
 
 import '../screens/filters_screen.dart';
 
 class SearchSection extends StatefulWidget {
-  SearchSection({Key? key}) : super(key: key);
+  const SearchSection({Key? key}) : super(key: key);
 
   @override
   _SearchSectionState createState() => _SearchSectionState();
@@ -13,14 +15,16 @@ class SearchSection extends StatefulWidget {
 class _SearchSectionState extends State<SearchSection> {
   @override
   Widget build(BuildContext context) {
-    return  Row(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
           height: 65,
           width: MediaQuery.of(context).size.width * .8,
           decoration: BoxDecoration(
-              color: const Color(0xffedeeef),
+              color: isDark ? const Color(0xff1d1d24) : AppColors.lightSurface,
               borderRadius: BorderRadius.circular(10)),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -38,7 +42,7 @@ class _SearchSectionState extends State<SearchSection> {
                         border: OutlineInputBorder(
                             borderSide: BorderSide.none,
                             borderRadius: BorderRadius.circular(20)),
-                        hintText: "Search for Honda Pilot 7-Passenger"),
+                        hintText: context.l10n.t('searchHint')),
                   ),
                 )
               ],

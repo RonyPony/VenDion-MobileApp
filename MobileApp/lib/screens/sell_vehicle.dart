@@ -1,29 +1,26 @@
-import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/config/app_constants.dart';
+import 'package:vendion/l10n/app_localizations.dart';
 import 'package:vendion/models/register_car.dart';
 import 'package:vendion/models/user_response.dart';
 import 'package:vendion/models/vehicles.dart';
 import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
-import 'package:vendion/widgets/brandModelSelector.dart';
 
 import '../models/brands.dart';
 import '../models/models.dart';
 import '../models/photoUpload.dart';
 import '../providers/photo_provider.dart';
 import '../widgets/customPicker.dart';
-import '../widgets/drawer.dart';
 import '../widgets/main_button_widget.dart';
+import '../widgets/notification_button.dart';
 import 'home_screen.dart';
-import 'notifications_screen.dart';
 
 class SellScreen extends StatefulWidget {
   static String routeName = "/sellScreen";
@@ -71,11 +68,45 @@ class _buildState extends State<SellScreen> {
 
   bool editMode = false;
 
+  Color get _fieldFillColor => Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xff1d1d24)
+      : AppColors.lightSurface;
+
+  InputDecoration _fieldDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: Colors.transparent,
+      hintStyle: TextStyle(
+        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(.45),
+      ),
+      border: OutlineInputBorder(
+        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+      ),
+    );
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     loadBrands();
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    yearController.dispose();
+    locationController.dispose();
+    priceController.dispose();
+    descriptionController.dispose();
+    featuresController.dispose();
+    contactNumber.dispose();
+    super.dispose();
   }
 
   @override
@@ -95,19 +126,7 @@ class _buildState extends State<SellScreen> {
       // drawer: GeneralDrawer(),
       appBar: AppBar(
         toolbarHeight: MediaQuery.of(context).size.height * .1,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, NotificationsScreen.routeName);
-                },
-                child: SvgPicture.asset("assets/notification-active.svg")),
-          )
-        ],
+        actions: const [NotificationButton()],
         title: const Text(
           "VenDion",
           textAlign: TextAlign.center,
@@ -236,7 +255,7 @@ class _buildState extends State<SellScreen> {
               width: MediaQuery.of(context).size.width - 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Color(0xffedeeef),
+                color: _fieldFillColor,
               ),
               padding: EdgeInsets.only(left: 0, top: 0, bottom: 0, right: 0
                   // right: MediaQuery.of(context).size.width/3,
@@ -249,13 +268,8 @@ class _buildState extends State<SellScreen> {
                       child: TextField(
                         controller: titleController,
                         // cursorHeight: 30,
-                        cursorColor: Color(0xffff5b00),
-                        decoration: InputDecoration(
-                          hintText: "Agrega el titulo",
-                          border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                              borderRadius: BorderRadius.circular(20)),
-                        ),
+                        cursorColor: AppColors.primary,
+                        decoration: _fieldDecoration("Agrega el titulo"),
                       ))
                   // Text(
                   //   "Enter title",
@@ -367,7 +381,7 @@ class _buildState extends State<SellScreen> {
               width: MediaQuery.of(context).size.width * .4,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Color(0xffedeeef),
+                color: _fieldFillColor,
               ),
               padding: EdgeInsets.only(
                 left: 0,
@@ -387,13 +401,8 @@ class _buildState extends State<SellScreen> {
                       // cursorHeight: 30,
                       keyboardType: TextInputType.number,
                       controller: yearController,
-                      cursorColor: Color(0xffff5b00),
-                      decoration: InputDecoration(
-                        hintText: "Agrega el Año",
-                        border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.circular(20)),
-                      ),
+                      cursorColor: AppColors.primary,
+                      decoration: _fieldDecoration("Agrega el Año"),
                     ),
                   )
                   // Text(
@@ -423,7 +432,7 @@ class _buildState extends State<SellScreen> {
               width: MediaQuery.of(context).size.width - 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Color(0xffedeeef),
+                color: _fieldFillColor,
               ),
               padding: EdgeInsets.only(left: 0, top: 0, bottom: 0, right: 0
                   // right: MediaQuery.of(context).size.width/3,
@@ -450,13 +459,8 @@ class _buildState extends State<SellScreen> {
                           setState(() {});
                         },
                         // cursorHeight: 30,
-                        cursorColor: Color(0xffff5b00),
-                        decoration: InputDecoration(
-                          hintText: "Buscar",
-                          border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                              borderRadius: BorderRadius.circular(20)),
-                        ),
+                        cursorColor: AppColors.primary,
+                        decoration: _fieldDecoration("Buscar"),
                       ))
                   // Text(
                   //   "Enter title",
@@ -700,7 +704,7 @@ class _buildState extends State<SellScreen> {
               width: MediaQuery.of(context).size.width * .4,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Color(0xffedeeef),
+                color: _fieldFillColor,
               ),
               padding: EdgeInsets.only(
                 left: 0,
@@ -719,13 +723,8 @@ class _buildState extends State<SellScreen> {
                     child: TextField(
                       // cursorHeight: 30,
                       controller: locationController,
-                      cursorColor: Color(0xffff5b00),
-                      decoration: InputDecoration(
-                        hintText: "Locacion",
-                        border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.circular(20)),
-                      ),
+                      cursorColor: AppColors.primary,
+                      decoration: _fieldDecoration("Locacion"),
                     ),
                   )
                   // Text(
@@ -755,7 +754,7 @@ class _buildState extends State<SellScreen> {
               width: MediaQuery.of(context).size.width * .4,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Color(0xffedeeef),
+                color: _fieldFillColor,
               ),
               padding: EdgeInsets.only(
                 left: 0,
@@ -775,13 +774,8 @@ class _buildState extends State<SellScreen> {
                       // cursorHeight: 30,
                       controller: priceController,
                       keyboardType: TextInputType.number,
-                      cursorColor: Color(0xffff5b00),
-                      decoration: InputDecoration(
-                        hintText: "US:800",
-                        border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.circular(20)),
-                      ),
+                      cursorColor: AppColors.primary,
+                      decoration: _fieldDecoration("US:800"),
                     ),
                   )
                 ],
@@ -803,7 +797,7 @@ class _buildState extends State<SellScreen> {
               width: MediaQuery.of(context).size.width - 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Color(0xffedeeef),
+                color: _fieldFillColor,
               ),
               padding: EdgeInsets.only(left: 0, top: 0, bottom: 0, right: 0
                   // right: MediaQuery.of(context).size.width/3,
@@ -819,13 +813,9 @@ class _buildState extends State<SellScreen> {
                         minLines: 1,
                         maxLines: 5,
                         // cursorHeight: 30,
-                        cursorColor: Color(0xffff5b00),
-                        decoration: InputDecoration(
-                          hintText:
-                              "Agrega la descripcion del vehiculo, incluye detalles generales y condiciones especificas del estado actual del vehiculo.",
-                          border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                              borderRadius: BorderRadius.circular(20)),
+                        cursorColor: AppColors.primary,
+                        decoration: _fieldDecoration(
+                          "Agrega la descripcion del vehiculo, incluye detalles generales y condiciones especificas del estado actual del vehiculo.",
                         ),
                       ))
                 ],
@@ -867,10 +857,12 @@ class _buildState extends State<SellScreen> {
           child: Column(
             children: [
               photoList.length > 0
-                  ? Container(
+                  ? SizedBox(
                       height: 200,
                       width: MediaQuery.of(context).size.width,
                       child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md),
                         scrollDirection: Axis.horizontal,
                         itemCount: photoList.length,
                         itemBuilder: (context, index) {
@@ -883,16 +875,32 @@ class _buildState extends State<SellScreen> {
                             child: Row(
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                      padding: EdgeInsets.all(5),
+                                  padding: const EdgeInsets.all(AppSpacing.sm),
+                                  child: ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.md),
+                                    child: Container(
+                                      width: 150,
+                                      height: 180,
                                       decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                              color: Color(0xffff5b00))),
+                                        borderRadius:
+                                            BorderRadius.circular(AppRadius.md),
+                                        border: Border.all(
+                                            color: AppColors.primary),
+                                      ),
                                       child: Image.file(
-                                          File(photoList[index].image!))),
+                                        File(photoList[index].image!),
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return const Icon(
+                                            Icons.broken_image_outlined,
+                                            color: AppColors.primary,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -900,7 +908,7 @@ class _buildState extends State<SellScreen> {
                         },
                       ),
                     )
-                  : Text("Click arriba para agregar fotos"),
+                  : Text(context.l10n.t('tapToAddPhotos')),
               photoList.length == 0
                   ? Icon(
                       Icons.cloud_upload,
@@ -917,8 +925,7 @@ class _buildState extends State<SellScreen> {
                               ScaffoldMessenger.of(context)
                                   .showSnackBar(SnackBar(
                                 backgroundColor: Colors.red,
-                                content: Text(
-                                    "Hey, solo puedes agregar 10 fotos por cada publicacion, puedes enviar fotos extra por chat."),
+                                content: Text(context.l10n.t('photoLimit')),
                               ));
                             }
                           },
@@ -1170,7 +1177,7 @@ class _buildState extends State<SellScreen> {
               width: MediaQuery.of(context).size.width - 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: Color(0xffedeeef),
+                color: _fieldFillColor,
               ),
               padding: EdgeInsets.only(left: 0, top: 0, bottom: 0, right: 0
                   // right: MediaQuery.of(context).size.width/3,
@@ -1184,13 +1191,8 @@ class _buildState extends State<SellScreen> {
                         controller: contactNumber,
                         // cursorHeight: 30,
                         keyboardType: TextInputType.phone,
-                        cursorColor: Color(0xffff5b00),
-                        decoration: InputDecoration(
-                          hintText: "Agrega el numero",
-                          border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                              borderRadius: BorderRadius.circular(20)),
-                        ),
+                        cursorColor: AppColors.primary,
+                        decoration: _fieldDecoration("Agrega el numero"),
                       ))
                   // Text(
                   //   "Enter title",

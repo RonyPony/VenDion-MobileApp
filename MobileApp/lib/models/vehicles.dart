@@ -45,20 +45,21 @@ class Vehicle {
     createdBy = json['createdBy'];
     isEnabled = json['isEnabled'];
     isPublished = json['isPublished'];
-    features = json['features'];//.cast<String>();
+    features = json['features']; //.cast<String>();
     price = json['price'];
     contactPhoneNumber = json['contactPhoneNumber'];
     name = json['name'];
     description = json['description'];
     registerDate = json['registerDate'];
-    isOffer =json['isOffer'];
+    isOffer = json['isOffer'];
     modificationDate = json['modificationDate'];
     brand = json['brand'];
     model = json['model'];
     year = json['year'];
     vim = json['vim'];
-    location=json['location'];
+    location = json['location'];
     condition = json['condition'];
+    isFavorite = json['isFavorite'];
   }
 
   Map<String, dynamic> toJson() {
@@ -79,7 +80,7 @@ class Vehicle {
     data['model'] = this.model;
     data['year'] = this.year;
     data['vim'] = this.vim;
-    data['location']=this.location;
+    data['location'] = this.location;
     data['condition'] = this.condition;
     return data;
   }

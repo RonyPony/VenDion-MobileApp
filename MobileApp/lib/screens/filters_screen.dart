@@ -1,408 +1,322 @@
-import 'dart:convert';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/config/app_constants.dart';
+import 'package:vendion/l10n/app_localizations.dart';
 import 'package:vendion/models/brands.dart';
+import 'package:vendion/models/models.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
-import 'package:vendion/widgets/brandModelSelector.dart';
 
-import '../models/models.dart';
-import '../models/serverResponse.dart';
-import '../widgets/customPicker.dart';
 import '../widgets/customRangeSelector.dart';
 import '../widgets/textBox_widget.dart';
 
 class FiltersScreen extends StatefulWidget {
   static String routeName = "/filtersScreen";
 
+  const FiltersScreen({Key? key}) : super(key: key);
+
   @override
   State<FiltersScreen> createState() => _StateFilterScreen();
 }
 
 class _StateFilterScreen extends State<FiltersScreen> {
+  final TextEditingController _locationController = TextEditingController();
+
   int _conditions = 0;
+  bool _loadingBrands = true;
+  bool _loadingModels = false;
+  List<Brand> _brands = [];
+  List<Model> _models = [];
+  Brand? _selectedBrand;
+  Model? _selectedModel;
 
-  String PickerData = "ronel";
-
-  List<String> _carBrandsName = ["Todas"];
-  List<String> _carModelName = ["Todos"];
-  var brands;
-  int selectedbrandId = 0;
-  String selectedBrandName = "";
-  String selectedBrandModel = "";
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    brands = getBrands();
+    _loadBrands();
+  }
+
+  @override
+  void dispose() {
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadBrands() async {
+    setState(() {
+      _loadingBrands = true;
+    });
+
+    try {
+      final vehicleProvider =
+          Provider.of<VehiclesProvider>(context, listen: false);
+      final response = await vehicleProvider.getBrands();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _brands = response;
+        _loadingBrands = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _brands = [];
+        _loadingBrands = false;
+      });
+    }
+  }
+
+  Future<void> _loadModelsForBrand(Brand? brand) async {
+    setState(() {
+      _selectedBrand = brand;
+      _selectedModel = null;
+      _models = [];
+      _loadingModels = brand?.id != null;
+    });
+
+    if (brand?.id == null) {
+      return;
+    }
+
+    try {
+      final vehicleProvider =
+          Provider.of<VehiclesProvider>(context, listen: false);
+      final response = await vehicleProvider.getModels(brand!.id!);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _models = response;
+        _loadingModels = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _models = [];
+        _loadingModels = false;
+      });
+    }
+  }
+
+  void _setCondition(int condition) {
+    if (_conditions == condition) {
+      return;
+    }
+
+    setState(() {
+      _conditions = condition;
+      _selectedModel = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Color(0xffff5b00),
-        title: Text("Filtros de busqueda"),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        title: Text(context.l10n.t('filters')),
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 34),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildCarConditions(),
-            _buildBrandModelSelectors(context),
+            const SizedBox(height: AppSpacing.lg),
+            _buildBrandModelSelectors(),
             _buildLocationField(),
             _buildPriceRange(),
-            _buildApplyButton()
+            _buildApplyButton(),
           ],
         ),
       ),
     );
   }
 
-  _buildCarConditions() {
+  Widget _buildCarConditions() {
+    final options = [
+      _FilterCondition(0, context.l10n.t('all')),
+      _FilterCondition(1, context.l10n.t('new')),
+      _FilterCondition(2, context.l10n.t('used')),
+    ];
+
     return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      children: options.map((option) {
+        final selected = _conditions == option.value;
+
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ChoiceChip(
+              selected: selected,
+              label: Center(child: Text(option.label)),
+              selectedColor: AppColors.primary,
+              labelStyle: TextStyle(
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).textTheme.bodyMedium?.color,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              ),
+              onSelected: (_) => _setCondition(option.value),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildBrandModelSelectors() {
+    final fillColor = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xff1d1d24)
+        : AppColors.lightSurface;
+
+    return Column(
       children: [
-        GestureDetector(
-          onTap: () {
-            setCondition(0);
-          },
-          child: Container(
-            width: 119,
-            height: 120,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    "Todos",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xffff5b00),
-                      fontSize: 20,
-                      fontFamily: "Lato",
-                      fontWeight: _conditions == 0
-                          ? FontWeight.w900
-                          : FontWeight.normal,
-                    ),
-                  ),
+        if (_loadingBrands)
+          const LinearProgressIndicator(color: AppColors.primary),
+        DropdownButtonFormField<Brand>(
+          value: _selectedBrand,
+          isExpanded: true,
+          decoration: _pickerDecoration(context.l10n.t('brand'), fillColor),
+          items: _brands
+              .map(
+                (brand) => DropdownMenuItem<Brand>(
+                  value: brand,
+                  child: Text(brand.name ?? context.l10n.t('noData')),
                 ),
-                SizedBox(height: 7),
-                SizedBox(
-                  width: double.infinity,
-                  height: _conditions == 0 ? 3 : 0,
-                  child: Material(
-                    color: Color(0xffff5b00),
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              )
+              .toList(),
+          onChanged: _loadingBrands ? null : _loadModelsForBrand,
         ),
-        GestureDetector(
-          onTap: () {
-            setCondition(1);
-          },
-          child: Container(
-            width: 119,
-            height: 120,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    "Nuevos",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xffff5b00),
-                      fontSize: 20,
-                      fontFamily: "Lato",
-                      fontWeight: _conditions == 1
-                          ? FontWeight.w900
-                          : FontWeight.normal,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 7),
-                SizedBox(
-                  width: double.infinity,
-                  height: _conditions == 1 ? 3 : 0,
-                  child: Material(
-                    color: Color(0xffff5b00),
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                ),
-              ],
-            ),
+        const SizedBox(height: AppSpacing.md),
+        if (_loadingModels)
+          const LinearProgressIndicator(color: AppColors.primary),
+        DropdownButtonFormField<Model>(
+          value: _selectedModel,
+          isExpanded: true,
+          decoration: _pickerDecoration(
+            _selectedBrand == null
+                ? context.l10n.t('selectBrandFirst')
+                : context.l10n.t('model'),
+            fillColor,
           ),
-        ),
-        GestureDetector(
-          onTap: () {
-            setCondition(2);
-          },
-          child: Container(
-            width: 119,
-            height: 120,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    "Usados",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xffff5b00),
-                      fontSize: 20,
-                      fontFamily: "Lato",
-                      fontWeight: _conditions == 2
-                          ? FontWeight.w900
-                          : FontWeight.normal,
-                    ),
-                  ),
+          items: _models
+              .map(
+                (model) => DropdownMenuItem<Model>(
+                  value: model,
+                  child: Text(model.modelName ?? context.l10n.t('noData')),
                 ),
-                SizedBox(height: 7),
-                SizedBox(
-                  width: double.infinity,
-                  height: _conditions == 2 ? 3 : 0,
-                  child: Material(
-                    color: Color(0xffff5b00),
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              )
+              .toList(),
+          onChanged: _selectedBrand == null || _loadingModels
+              ? null
+              : (model) {
+                  setState(() {
+                    _selectedModel = model;
+                  });
+                },
         ),
       ],
     );
   }
 
-  void setCondition(int i) {
-    setState(() {
-      _conditions = i;
-    });
-  }
-
-  _buildBrandModelSelectors(BuildContext ct) {
-    return FutureBuilder<List<Brand>>(
-      future: brands,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return LinearProgressIndicator(
-            color: Color(0xffff5b00),
-            backgroundColor: Colors.white,
-          );
-        }
-        if (snapshot.hasError) {
-          return Text("Error");
-        }
-        if (snapshot.hasData &&
-            snapshot.connectionState == ConnectionState.done) {
-          snapshot.data!.forEach(
-            (element) {
-              _carBrandsName.add(element.name!);
-            },
-          );
-          return BrandModelSelector(
-              selectedBrand: selectedBrandName,
-              selectedModel: selectedBrandModel,
-              brands: _carBrandsName,
-              models: _carModelName);
-          // return Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     CustomPicker(
-          //       placeHolder: "Marca:",
-          //       options: _carBrandsName,
-          //       onChange: (int x) async {
-          //         if (kDebugMode) {
-          //           selectedbrandId = x;
-          //           selectedBrandName = _carBrandsName[x];
-          //           print("Selected ${_carBrandsName[x]}");
-          //         }
-          //       },
-          //     ),
-          //     Padding(
-          //       padding: const EdgeInsets.symmetric(horizontal: 8),
-          //       child: GestureDetector(
-          //         onTap: () async {
-          //           // _carModelName
-          //           if (selectedBrandName!="" && selectedBrandName != "Todas") {
-          //             List<Model> x = await getModels(selectedBrandName);
-          //             _carModelName.clear();
-          //             for (Model modelo in x) {
-          //               _carModelName.add(modelo.modelName!);
-          //             }
-          //             setState(() {});
-          //           }
-          //         },
-          //         child: Container(
-          //           padding: EdgeInsets.all(5),
-          //           child: Icon(Icons.sync_alt,color: Colors.white,),
-          //           decoration: BoxDecoration(
-          //             color: Color(0xffff5b00),
-          //             borderRadius: BorderRadius.circular(10)
-          //           ),
-          //         ),
-          //       ),
-          //     ),
-          //     // SizedBox(
-          //     //   width: 10,
-          //     // ),
-          //     CustomPicker(
-          //       placeHolder: "Modelo:",
-          //       options: _carModelName,
-          //       onChange: (int x) async {
-          //         if (kDebugMode) {
-          //           selectedbrandId = x;
-
-          //           // print("Selected ${brands[x]}");
-          //         }
-          //       },
-          //     )
-          //   ],
-          // );
-        }
-        return Text("Error");
-      },
+  InputDecoration _pickerDecoration(String label, Color fillColor) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: fillColor,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
     );
   }
 
-  Future<List<Brand>> getBrands() async {
-    final vehicleProvider =
-        Provider.of<VehiclesProvider>(context, listen: false);
-    List<Brand> response = await vehicleProvider.getBrands();
-    _carBrandsName.clear();
-    for (Brand brand in response) {
-      _carBrandsName.add(brand.name!);
-    }
-    return response;
-  }
-
-  Future<List<Model>> getModels(String makeName) async {
-    List<Model> models = [];
-    try {
-      var response = await Dio().get(
-          'https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/$makeName?format=json');
-      print(response);
-      for (Map<String, dynamic> data in response.data["Results"]) {
-        print(data);
-        Model newModel = Model.fromJson(data);
-        models.add(newModel);
-      }
-      //  marcas = response.data["Results"].map((model) => Brand.fromJson(model)).toList();
-
-      print(models);
-      return models;
-    } catch (e) {
-      print(e);
-      return models;
-    }
-    // _carBrandsName
-  }
-
-  _buildLocationField() {
-    TextEditingController _controller = TextEditingController();
+  Widget _buildLocationField() {
     return Padding(
-      padding: const EdgeInsets.only(top: 50),
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
       child: CustomTextBox(
-        controller: _controller,
+        controller: _locationController,
         onChange: () {},
-        text: 'Ubicacion',
-        svg: Icon(
+        text: context.l10n.t('location'),
+        svg: const Icon(
           Icons.location_on_rounded,
-          color: Color(0xffff5b00),
+          color: AppColors.primary,
         ),
       ),
     );
   }
 
-  _buildPriceRange() {
+  Widget _buildPriceRange() {
     return Padding(
-      padding: const EdgeInsets.only(top: 50),
-      child: Container(
-        width: 324,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Price Range",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 18,
-                fontFamily: "Poppins",
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            SizedBox(height: 5),
-            CustomRangeSelect(
-              min: 0,
-              max: 60000,
-              onChange: (RangeValues valores) {
-                if (kDebugMode) {
-                  print(valores);
-                  // print("$minimunAgeToMatch - $maximunAgeToMatch");
-                }
-              },
-            ),
-          ],
-        ),
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.t('priceRange'),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          CustomRangeSelect(
+            min: 0,
+            max: 60000,
+            onChange: (RangeValues valores) {
+              if (kDebugMode) {
+                print(valores);
+              }
+            },
+          ),
+        ],
       ),
     );
   }
 
-  _buildApplyButton() {
+  Widget _buildApplyButton() {
     return Padding(
-      padding: const EdgeInsets.only(top: 50),
-      child: GestureDetector(
-        onTap: () {},
-        child: SizedBox(
-          width: 174,
-          child: Material(
-            color: Color(0xffff5b00),
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 1,
-                vertical: 15,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Apply Filters",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontFamily: "Poppins",
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+      padding: const EdgeInsets.only(top: AppSpacing.xl),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+          ),
+          onPressed: () {},
+          child: Text(
+            context.l10n.t('applyFilters'),
+            style: const TextStyle(
+              fontSize: 15,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _FilterCondition {
+  const _FilterCondition(this.value, this.label);
+
+  final int value;
+  final String label;
 }

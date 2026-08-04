@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:vendion/models/user_response.dart';
 import 'package:vendion/models/vehicles.dart';
@@ -9,13 +6,11 @@ import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/providers/photo_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/screens/car_details_screen.dart';
-import 'package:vendion/services/user_service.dart';
 
 import '../models/photo.dart';
 import '../widgets/bottom_menu.dart';
 import '../widgets/drawer.dart';
-import '../widgets/search_section.dart';
-import 'notifications_screen.dart';
+import '../widgets/notification_button.dart';
 
 class MyVehiclesScreen extends StatefulWidget {
   static String routeName = "/myvehiclesScreen";
@@ -33,19 +28,7 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
       drawer: GeneralDrawer(),
       appBar: AppBar(
         toolbarHeight: MediaQuery.of(context).size.height * .1,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, NotificationsScreen.routeName);
-                },
-                child: SvgPicture.asset("assets/notification-active.svg")),
-          )
-        ],
+        actions: const [NotificationButton()],
         title: const Text(
           "VenDion",
           textAlign: TextAlign.center,
@@ -87,40 +70,51 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
       ),
     );
   }
-  
+
   Future<Widget> _buildMyVehicles() async {
-    final provider = Provider.of<VehiclesProvider>(context,listen: false);
-    final authProvider = Provider.of<AuthenticationProvider>(context, listen: false);
-    final photoProvider = Provider.of<PhotoProvider>(context,listen: false);
-    UserResponse user =await authProvider.getCurrentUser();
+    final provider = Provider.of<VehiclesProvider>(context, listen: false);
+    final authProvider =
+        Provider.of<AuthenticationProvider>(context, listen: false);
+    final photoProvider = Provider.of<PhotoProvider>(context, listen: false);
+    UserResponse user = await authProvider.getCurrentUser();
     List<Vehicle> userVehicles = await provider.getVehiclesByUser(user.id!);
 
     return ListView.builder(
       itemCount: userVehicles.length,
       itemBuilder: (context, index) {
-        Future<Photo> carImage = photoProvider.getVehiclePicture(userVehicles[index].id!);
+        Future<Photo> carImage =
+            photoProvider.getVehiclePicture(userVehicles[index].id!);
         return FutureBuilder<Photo>(
           future: carImage,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return LinearProgressIndicator(backgroundColor: Colors.white,color: Colors.green,minHeight: 2,);
+              return LinearProgressIndicator(
+                backgroundColor: Colors.white,
+                color: Colors.green,
+                minHeight: 2,
+              );
             }
             if (snapshot.hasError) {
               return Text("Error loading");
             }
-            if (snapshot.connectionState ==ConnectionState.done && snapshot.hasData) {
-             
+            if (snapshot.connectionState == ConnectionState.done &&
+                snapshot.hasData) {
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(context, VehicleDetails.routeName,arguments: userVehicles[index]);
+                    Navigator.pushNamed(context, VehicleDetails.routeName,
+                        arguments: userVehicles[index]);
                   },
                   child: ListTile(
                     // leading: Image.memory(base64Decode(snapshot.data!.image!)),
                     title: Text(userVehicles[index].name!),
-                    subtitle: Text(userVehicles[index].description!),//.substring(0,20)+"..."),
-                    trailing: Icon(Icons.arrow_forward_ios_rounded,color: Colors.orange,),
+                    subtitle: Text(userVehicles[index]
+                        .description!), //.substring(0,20)+"..."),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.orange,
+                    ),
                   ),
                 ),
               );

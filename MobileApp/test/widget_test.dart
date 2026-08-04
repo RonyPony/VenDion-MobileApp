@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
     await tester.pump();
 
-    expect(find.text('Login '), findsOneWidget);
+    expect(find.text('Login'), findsNWidgets(2));
     expect(find.text('Bienvenido a VenDion'), findsOneWidget);
   });
 }

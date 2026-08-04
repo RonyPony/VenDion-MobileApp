@@ -1,165 +1,129 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/config/app_constants.dart';
+import 'package:vendion/l10n/app_localizations.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/models/vehicles.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/screens/car_details_screen.dart';
+import 'package:vendion/widgets/vehicle_image.dart';
 
 class Carrousel extends StatelessWidget {
-  ScrollController controller = ScrollController();
-  List<Vehicle> list = [];
+  const Carrousel(this.list, {Key? key}) : super(key: key);
 
-  Carrousel(List<Vehicle> info) {
-    list = info;
-  }
+  final List<Vehicle> list;
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Column(
-        children: [
-          _buildCarrousell(context),
-        ],
-      ),
-    );
-  }
+    final height = MediaQuery.of(context).size.height * .3;
 
-  _buildAphoto(bool isSpetial, String descri, Image photo) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Container(
-        width: 300,
-        child: Stack(
-          children: [
-            ClipRRect(borderRadius: BorderRadius.circular(20), child: photo),
-            Padding(
-              padding: const EdgeInsets.only(top: 140),
-              child: descri.length > 44
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.only(
-                              left: 10, right: 10, top: 5, bottom: 5),
-                          decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(.5),
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Text(
-                            descri.substring(0,35)+"...",
-                            style: TextStyle(color: Colors.black),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.only(
-                              left: 10, right: 10, top: 5, bottom: 5),
-                          decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(.5),
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Text(
-                            descri,
-                            style: TextStyle(color: Colors.black),
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-            isSpetial
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 25, right: 0),
-                    child: Transform.rotate(
-                      angle: -0.80,
-                      child: Container(
-                        padding: EdgeInsets.only(left: 10, right: 10),
-                        decoration: BoxDecoration(
-                            color: Color(0xffff5b00),
-                            borderRadius: BorderRadius.circular(10)),
-                        child: const Text(
-                          "Oferta",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontFamily: "Lato",
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                : SizedBox(),
-            isSpetial
-                ? Transform.rotate(
-                    angle: -0.80,
-                    child: const Icon(
-                      Icons.star_rate_rounded,
-                      size: 35,
-                      color: Color(0xffff5b00),
-                    ),
-                  )
-                : SizedBox()
-          ],
-        ),
-      ),
-    );
-  }
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: height,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        scrollDirection: Axis.horizontal,
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final photoProvider =
+              Provider.of<VehiclesProvider>(context, listen: false);
+          final Future<VehiclePhoto> vehiclePhoto =
+              photoProvider.getVechiclePhoto(list[index].id!);
 
-  _buildCarrousell(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: MediaQuery.of(context).size.width * .9,
-          height: MediaQuery.of(context).size.height * .3,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              final photoProvider =
-                  Provider.of<VehiclesProvider>(context, listen: false);
-              Future<VehiclePhoto> vehiclePhoto =
-                  photoProvider.getVechiclePhoto(list[index].id!);
-              return FutureBuilder<VehiclePhoto>(
-                future: vehiclePhoto,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                        child: Padding(
-                      padding: EdgeInsets.only(left: 30),
-                      child: CircularProgressIndicator(
-                        color: Color(0xffff5b00),
-                      ),
-                    ));
-                  }
-                  if (snapshot.hasError) {
-                    return Text("Error");
-                  }
-                  if (snapshot.hasData &&
-                      snapshot.connectionState == ConnectionState.done) {
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, VehicleDetails.routeName,arguments: list[index]);
-                      },
-                      child: _buildAphoto(true, list[index].description!,
-                          Image.memory(base64Decode(snapshot.data!.image!))),
-                    );
-                  }
-
-                  return Text(
-                      "Ups, something happened trying to get the offers");
-                },
+          return GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                VehicleDetails.routeName,
+                arguments: list[index],
               );
             },
+            child: _OfferCard(
+              future: vehiclePhoto,
+              description: list[index].description ?? context.l10n.t('noData'),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _OfferCard extends StatelessWidget {
+  const _OfferCard({
+    required this.future,
+    required this.description,
+  });
+
+  final Future<VehiclePhoto> future;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 300,
+      margin: const EdgeInsets.only(right: AppSpacing.md),
+      child: Stack(
+        children: [
+          VehiclePhotoFutureImage(
+            future: future,
+            height: MediaQuery.of(context).size.height * .26,
+            width: 300,
+            borderRadius: 20,
           ),
-        ),
-        // _buildAphoto(true, "Tesla model x la para de paras grasa only grasa"),
-        // _buildAphoto(false, "Excelente vehiculo"),
-        // _buildAphoto(true, "Nuevesito"),
-      ],
+          Positioned(
+            left: AppSpacing.sm,
+            top: AppSpacing.md,
+            child: Transform.rotate(
+              angle: -0.65,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Text(
+                  context.l10n.t('offer'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+            bottom: AppSpacing.md,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(.55),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Text(
+                description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

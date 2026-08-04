@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:vendion/contracts/user_contract.dart';
@@ -11,16 +10,23 @@ import '../models/new_password_request.dart';
 import '../models/user_login_response.dart';
 import '../models/user_register.dart';
 import '../models/user_response.dart';
+import '../services/credential_cache_service.dart';
 
 class AuthenticationProvider with ChangeNotifier {
-  AuthContract _authenticationService;
-  UserContract _userService;
+  final AuthContract _authenticationService;
+  final UserContract _userService;
+  final CredentialCacheService _credentialCacheService;
   bool isUserLoggedIn = false;
   UserResponse? loggedUser;
   int? userAge;
   String? nextRoute;
 
-  AuthenticationProvider(this._authenticationService, this._userService);
+  AuthenticationProvider(
+    this._authenticationService,
+    this._userService, [
+    CredentialCacheService? credentialCacheService,
+  ]) : _credentialCacheService =
+            credentialCacheService ?? CredentialCacheService();
 
   Future<bool> checkIfUserIsLoggingForTheFirstTime() async {
     final result = await _authenticationService.amountOfTimesUserHasLoggedIn();
@@ -41,10 +47,10 @@ class AuthenticationProvider with ChangeNotifier {
 
   Future<UserResponse> authenticateUser(
       ClientUser user, bool rememberMe) async {
-
     UserResponse returnInfo = UserResponse();
     try {
-      final UserLoginReponse res = await _authenticationService.logInUser(user, rememberMe);
+      final UserLoginReponse res =
+          await _authenticationService.logInUser(user, rememberMe);
       if (!res.hasError!) {
         // FlutterWoocommerce x = FlutterWoocommerce(
         //     url: serverurl, consumerKey: apikey, consumerSecret: secret);
@@ -62,18 +68,24 @@ class AuthenticationProvider with ChangeNotifier {
         );
         loggedUser = returnInfo;
         isUserLoggedIn = true;
+        if (rememberMe) {
+          await _credentialCacheService.save(user);
+        } else {
+          await _credentialCacheService.clear();
+        }
         notifyListeners();
-        returnInfo.hasError=false;
+        returnInfo.hasError = false;
         return returnInfo;
       } else {
-        returnInfo =UserResponse(hasError: res.hasError,errorInfo: res.errorDetails);
+        returnInfo =
+            UserResponse(hasError: res.hasError, errorInfo: res.errorDetails);
         return returnInfo;
       }
     } catch (e) {
       loggedUser = null;
       isUserLoggedIn = false;
-      returnInfo.hasError=true;
-      returnInfo.errorInfo = e.toString();      
+      returnInfo.hasError = true;
+      returnInfo.errorInfo = e.toString();
       notifyListeners();
       return returnInfo;
     }
@@ -112,9 +124,15 @@ class AuthenticationProvider with ChangeNotifier {
 
   Future signOutUser() async {
     await _authenticationService.signOutUser();
+    await _credentialCacheService.clear();
     isUserLoggedIn = false;
+    loggedUser = null;
     nextRoute = null;
     notifyListeners();
+  }
+
+  Future<ClientUser?> getCachedCredentials() {
+    return _credentialCacheService.readValid();
   }
 
   Future<ServerResponse> register(UserToRegister user) async {
@@ -136,8 +154,7 @@ class AuthenticationProvider with ChangeNotifier {
           code: '400', message: "userWithEmailAlreadyExists");
     }
 
-    final existsPhoneNumber =
-        await _userService.existsPhoneNumber(user.phone);
+    final existsPhoneNumber = await _userService.existsPhoneNumber(user.phone);
 
     if (existsPhoneNumber) {
       throw PlatformException(
@@ -168,8 +185,6 @@ class AuthenticationProvider with ChangeNotifier {
   Future<String?> sendVerificationCode(String? email) {
     return _userService.sendVerificationCode(email);
   }
-
- 
 
   Future<bool> changeForgottenPassword(ChangePasswordRequest request) async {
     return await _userService.changeForgottenPassword(request);

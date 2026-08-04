@@ -1,425 +1,341 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
-import 'package:vendion/models/favorites.dart';
-import 'package:vendion/models/user_response.dart';
+import 'package:vendion/config/app_constants.dart';
+import 'package:vendion/l10n/app_localizations.dart';
+import 'package:vendion/models/vehicles.dart';
 import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
+import 'package:vendion/widgets/bottom_menu.dart';
 import 'package:vendion/widgets/drawer.dart';
+import 'package:vendion/widgets/notification_button.dart';
+import 'package:vendion/widgets/search_section.dart';
+import 'package:vendion/widgets/vehicle_image.dart';
 
-import '../models/vehicle_photo.dart';
-import '../models/vehicles.dart';
-import '../widgets/bottom_menu.dart';
-import '../widgets/search_section.dart';
 import 'car_details_screen.dart';
-import 'filters_screen.dart';
-import 'notifications_screen.dart';
 
 class FavoriteScreen extends StatefulWidget {
   static String routeName = "/favoriteScreen";
+
+  const FavoriteScreen({super.key});
 
   @override
   State<FavoriteScreen> createState() => _StateFavoriteScreen();
 }
 
 class _StateFavoriteScreen extends State<FavoriteScreen> {
+  late Future<List<Vehicle>> _favoritesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _favoritesFuture = _loadFavoriteVehicles();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.white,
-        drawer: GeneralDrawer(),
-        appBar: AppBar(
-          toolbarHeight: MediaQuery.of(context).size.height * .1,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 20),
-              child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, NotificationsScreen.routeName);
-                  },
-                  child: SvgPicture.asset("assets/notification-active.svg")),
-            )
-          ],
-          title: const Text(
-            "VenDion",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xffff5b00),
-              fontSize: 24,
-              fontFamily: "Poppins",
-              fontWeight: FontWeight.w600,
-            ),
+      drawer: const GeneralDrawer(),
+      appBar: AppBar(
+        toolbarHeight: MediaQuery.of(context).size.height * .1,
+        actions: const [NotificationButton()],
+        title: Text(
+          context.l10n.t('appName'),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 24,
+            fontFamily: "Poppins",
+            fontWeight: FontWeight.w600,
           ),
         ),
-        body: Stack(
-          children: [
-            SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSearchSection(),
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(left: 20, top: 20, bottom: 20),
-                    child: Text(
-                      "Favoritos",
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-
-                  FutureBuilder<List<FavoriteVehicle>>(
-                    future: _getAllFavorites(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              color: Color(0xffff5b00),
-                            ),
-                          ],
-                        );
-                      }
-                      if (snapshot.hasError) {
-                        return Text("Error");
-                      }
-                      if (snapshot.hasData &&
-                          snapshot.connectionState == ConnectionState.done) {
-                        return Container(
-                          child: FutureBuilder<Widget>(
-                            future: _buildaFavorite(snapshot.data!),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    CircularProgressIndicator(
-                                      color: Color(0xffff5b00),
-                                    ),
-                                  ],
-                                );
-                              }
-
-                              if (snapshot.hasError) {
-                                return Text("Err");
-                              }
-
-                              if (snapshot.hasData &&
-                                  snapshot.connectionState ==
-                                      ConnectionState.done) {
-                                return snapshot.data!;
-                              }
-                              return Text("no data");
-                            },
-                          ),
-                        );
-                      }
-                      return Text("no data");
-                    },
-                  ),
-                  // Column(
-                  //   children: [
-                  //     Row(
-                  //       mainAxisAlignment: MainAxisAlignment.center,
-                  //       children: [
-                  //         _buildaFavorite(true, "name", "finalPrice"),
-                  //         _buildaFavorite(true, "name", "finalPrice"),
-                  //       ],
-                  //     ),
-                  //     Row(
-                  //       mainAxisAlignment: MainAxisAlignment.center,
-                  //       children: [
-                  //         _buildaFavorite(true, "name", "finalPrice"),
-                  //         _buildaFavorite(true, "name", "finalPrice"),
-                  //       ],
-                  //     ),
-                  //     Row(
-                  //       mainAxisAlignment: MainAxisAlignment.center,
-                  //       children: [
-                  //         _buildaFavorite(true, "name", "finalPrice"),
-                  //         _buildaFavorite(true, "name", "finalPrice"),
-                  //       ],
-                  //     ),
-                  //     SizedBox(height: 100,)
-                  //   ],
-                  // )
-                ],
-              ),
-            ),
-            BottomMenu(
-              currentIndex: 1,
-            ),
-          ],
-        ));
-  }
-
-  Future<Widget> _buildaFavorite(List<FavoriteVehicle> vehi) async {
-    final provider = Provider.of<VehiclesProvider>(context, listen: false);
-    List<Vehicle> vehiclesList = [];
-    for (FavoriteVehicle item in vehi) {
-      Vehicle vehicle = await provider.getVehicleInfo(item.vehicleId!);
-      vehiclesList.add(vehicle);
-    }
-
-    bool hasVideo = true;
-    if (vehiclesList.length == 0) {
-      return Padding(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).size.height / 4.5),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.star_rounded,
-                  size: 95,
-                  color: Color(0xffff5b00).withOpacity(.5),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "No has agregado nada a favoritos",
-                  style: TextStyle(
-                      fontSize: 20, color: Color(0xffff5b00).withOpacity(.5)),
-                ),
-              ],
-            )
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      // color: Colors.red,
-      height: MediaQuery.of(context).size.height * .62,
-      child: ListView.builder(
-        primary: true,
-        itemCount: vehiclesList.length,
-        itemBuilder: (context, index) {
-          Future<VehiclePhoto> _carPhoto =
-              provider.getVechiclePhoto(vehiclesList[index].id!);
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Container(
-              padding: EdgeInsets.only(
-                  left: MediaQuery.of(context).size.width * .04,
-                  right: MediaQuery.of(context).size.width * .04),
-              // color: Colors.red.withOpacity(.5),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, VehicleDetails.routeName,
-                      arguments: vehiclesList[index]);
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FutureBuilder<VehiclePhoto>(
-                      future: _carPhoto,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(
-                                color: Color(0xffff5b00),
-                              ),
-                            ],
-                          );
-                        }
-                        if (snapshot.hasError || snapshot.data!.image == null) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                "assets/placeholder.png",
-                                scale: 3,
-                              ),
-                            ],
-                          );
-                        }
-                        if (snapshot.hasData &&
-                            snapshot.connectionState == ConnectionState.done) {
-                          bool liked = true;
-                          return Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(30),
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  height: 200,
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                      fit: BoxFit.fill,
-                                      image: Image.memory(base64Decode(
-                                              snapshot.data!.image!))
-                                          .image,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              hasVideo
-                                  ? Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 160, left: 15),
-                                      child: Image.asset("assets/video.png"),
-                                    )
-                                  : SizedBox(),
-                              liked
-                                  ? Padding(
-                                      padding: EdgeInsets.only(
-                                          top: 10,
-                                          left: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              .75),
-                                      child: GestureDetector(
-                                          onTap: () {
-                                            print(
-                                                "Liked ${vehiclesList[index].name}");
-                                          },
-                                          child: SvgPicture.asset(
-                                              "assets/liked.svg")),
-                                    )
-                                  : Padding(
-                                      padding: EdgeInsets.only(
-                                          top: 10,
-                                          left: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              .75),
-                                      child: SvgPicture.asset(
-                                        "assets/notliked.svg",
-                                        width: 26,
-                                      ),
-                                    )
-                            ],
-                          );
-                        }
-                        return Text("No data");
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 10),
-                      child: SizedBox(
-                        width: 174,
-                        child: Text(
-                          vehiclesList[index].name!.toUpperCase(),
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontFamily: "Poppins",
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: Opacity(
-                        opacity: 0.50,
-                        child: Text(
-                          "Price: ${vehiclesList[index].price.toString()}  |  Year: ${vehiclesList[index].year}",
-                          style: TextStyle(
-                            color: Color(0xff040415),
-                            fontSize: 12,
-                            fontFamily: "Poppins",
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
       ),
-    );
-  }
-
-  Future<List<FavoriteVehicle>> _getAllFavorites() async {
-    final vehicleProvider =
-        Provider.of<VehiclesProvider>(context, listen: false);
-    final authProvider =
-        Provider.of<AuthenticationProvider>(context, listen: false);
-    UserResponse response = await authProvider.getCurrentUser();
-    List<FavoriteVehicle> favs =
-        await vehicleProvider.getAllFavoriteVehicles(response.id!);
-    return favs;
-  }
-
-  _buildaFavoriteOld(bool hasVideo, String name, String finalPrice) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
         children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: Image.asset('assets/audi.png'),
-              ),
-              hasVideo
-                  ? Padding(
-                      padding: const EdgeInsets.only(top: 150, left: 15),
-                      child: Image.asset("assets/video.png"),
-                    )
-                  : SizedBox(),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: SizedBox(
-              width: 174,
-              child: Text(
-                name,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontFamily: "Poppins",
-                  fontWeight: FontWeight.w500,
+          RefreshIndicator(
+            onRefresh: _refreshFavorites,
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _buildSearchSection()),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                    child: Text(
+                      context.l10n.t('favorites'),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
                 ),
-              ),
+                FutureBuilder<List<Vehicle>>(
+                  future: _favoritesFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.primary),
+                        ),
+                      );
+                    }
+
+                    if (snapshot.hasError) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _FavoritesState(
+                          icon: Icons.error_outline_rounded,
+                          text: context.l10n.t('error'),
+                          actionText: context.l10n.t('retry'),
+                          onPressed: _reloadFavorites,
+                        ),
+                      );
+                    }
+
+                    final vehicles = snapshot.data ?? [];
+                    if (vehicles.isEmpty) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _FavoritesState(
+                          icon: Icons.star_rounded,
+                          text: context.l10n.t('noFavorites'),
+                        ),
+                      );
+                    }
+
+                    return SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+                      sliver: SliverList.separated(
+                        itemCount: vehicles.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: AppSpacing.lg),
+                        itemBuilder: (context, index) {
+                          return _FavoriteVehicleCard(
+                            vehicle: vehicles[index],
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                VehicleDetails.routeName,
+                                arguments: vehicles[index],
+                              ).then((_) => _reloadFavorites());
+                            },
+                            onRemove: () => _removeFavorite(vehicles[index]),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: Opacity(
-              opacity: 0.50,
-              child: Text(
-                finalPrice,
-                style: TextStyle(
-                  color: Color(0xff040415),
-                  fontSize: 12,
-                  fontFamily: "Poppins",
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          )
+          const BottomMenu(currentIndex: 1),
         ],
       ),
     );
   }
 
-  _buildSearchSection() {
+  Widget _buildSearchSection() {
     return SearchSection();
+  }
+
+  Future<List<Vehicle>> _loadFavoriteVehicles() async {
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    final authProvider =
+        Provider.of<AuthenticationProvider>(context, listen: false);
+    final user = await authProvider.getCurrentUser();
+    if (user.id == null) {
+      return [];
+    }
+
+    final favorites = await vehicleProvider.getAllFavoriteVehicles(user.id!);
+    final seenVehicleIds = <int>{};
+    final vehicles = <Vehicle>[];
+
+    for (final favorite in favorites) {
+      final vehicleId = favorite.vehicleId;
+      if (vehicleId == null || !seenVehicleIds.add(vehicleId)) {
+        continue;
+      }
+      final vehicle = await vehicleProvider.getVehicleInfo(vehicleId);
+      vehicle.isFavorite = true;
+      vehicles.add(vehicle);
+    }
+
+    return vehicles;
+  }
+
+  Future<void> _refreshFavorites() async {
+    _reloadFavorites();
+    await _favoritesFuture;
+  }
+
+  void _reloadFavorites() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _favoritesFuture = _loadFavoriteVehicles();
+    });
+  }
+
+  Future<void> _removeFavorite(Vehicle vehicle) async {
+    try {
+      final vehicleProvider =
+          Provider.of<VehiclesProvider>(context, listen: false);
+      final authProvider =
+          Provider.of<AuthenticationProvider>(context, listen: false);
+      final user = await authProvider.getCurrentUser();
+      if (vehicle.id == null || user.id == null) {
+        throw Exception('Missing favorite data');
+      }
+
+      final success =
+          await vehicleProvider.removeFromFavorite(vehicle.id!, user.id!);
+      if (!success) {
+        throw Exception('Favorite remove failed');
+      }
+
+      _reloadFavorites();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.t('favoriteError'))),
+      );
+    }
+  }
+}
+
+class _FavoriteVehicleCard extends StatelessWidget {
+  const _FavoriteVehicleCard({
+    required this.vehicle,
+    required this.onTap,
+    required this.onRemove,
+  });
+
+  final Vehicle vehicle;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = Provider.of<VehiclesProvider>(context, listen: false);
+    final theme = Theme.of(context);
+
+    return Material(
+      color: theme.cardColor,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  VehiclePhotoFutureImage(
+                    future: provider.getVechiclePhoto(vehicle.id ?? 0),
+                    height: 200,
+                    borderRadius: AppRadius.lg,
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: IconButton.filled(
+                      style: IconButton.styleFrom(
+                        backgroundColor: theme.cardColor.withValues(alpha: .92),
+                        foregroundColor: AppColors.primary,
+                      ),
+                      tooltip: context.l10n.t('removeFromFavorites'),
+                      onPressed: onRemove,
+                      icon: const Icon(Icons.star_rounded),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                child: Text(
+                  (vehicle.name ?? context.l10n.t('noData')).toUpperCase(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontFamily: "Poppins",
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Opacity(
+                  opacity: 0.72,
+                  child: Text(
+                    "${context.l10n.t('price')}: ${vehicle.price ?? 0}  |  ${context.l10n.t('year')}: ${vehicle.year ?? context.l10n.t('noData')}",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: "Poppins",
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FavoritesState extends StatelessWidget {
+  const _FavoritesState({
+    required this.icon,
+    required this.text,
+    this.actionText,
+    this.onPressed,
+  });
+
+  final IconData icon;
+  final String text;
+  final String? actionText;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 88,
+              color: AppColors.primary.withValues(alpha: .5),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.primary.withValues(alpha: .72),
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            if (actionText != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton(
+                onPressed: onPressed,
+                child: Text(actionText!),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

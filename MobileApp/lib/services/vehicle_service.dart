@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
-import 'package:provider/provider.dart';
 import 'package:vendion/contracts/vehicles_contract.dart';
 import 'package:vendion/models/brands.dart';
 import 'package:vendion/models/favorites.dart';
@@ -17,7 +14,7 @@ class VehicleService implements VehiclesContract {
   @override
   Future<List<Vehicle>> getAllVehicles(int userId) async {
     Response? response;
-    List<Vehicle>? dataResponse;
+    List<Vehicle> dataResponse = [];
     try {
       response = await client.get('api/vehicle');
       if (response.statusCode == 200) {
@@ -35,27 +32,27 @@ class VehicleService implements VehiclesContract {
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
-          return dataResponse!;
+          return dataResponse;
         } else {
-          return dataResponse!;
+          return dataResponse;
         }
       }
     } on DioError catch (e) {
       if (e.response!.statusCode == 400) {
-        return dataResponse!;
+        return dataResponse;
       } else {
-        return dataResponse!;
+        return dataResponse;
       }
     } catch (e) {
       print(e);
-      return dataResponse!;
+      return dataResponse;
     }
   }
 
   @override
   Future<VehiclePhoto> getVehiclePhoto(int id) async {
     Response? response;
-    VehiclePhoto? dataResponse;
+    VehiclePhoto dataResponse = VehiclePhoto();
     try {
       response = await client.get('api/photos/byVehicle/' + id.toString());
       if (response.statusCode == 200) {
@@ -67,18 +64,18 @@ class VehicleService implements VehiclesContract {
           VehiclePhoto photo = VehiclePhoto();
           return photo;
         } else {
-          return dataResponse!;
+          return dataResponse;
         }
       }
     } on DioError catch (e) {
       if (e.response!.statusCode == 400) {
-        return dataResponse!;
+        return dataResponse;
       } else {
-        return dataResponse!;
+        return dataResponse;
       }
     } catch (e) {
       print(e);
-      return dataResponse!;
+      return dataResponse;
     }
   }
 
@@ -86,7 +83,7 @@ class VehicleService implements VehiclesContract {
   @override
   Future<List<VehiclePhoto>> getVehicleGallery(int id) async {
     Response? response;
-    List<VehiclePhoto>? dataResponse;
+    List<VehiclePhoto> dataResponse = [];
     try {
       response = await client.get('api/photos/gallery/' + id.toString());
       if (response.statusCode == 200) {
@@ -96,27 +93,27 @@ class VehicleService implements VehiclesContract {
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
-          return dataResponse!;
+          return dataResponse;
         } else {
-          return dataResponse!;
+          return dataResponse;
         }
       }
     } on DioError catch (e) {
       if (e.response!.statusCode == 400) {
-        return dataResponse!;
+        return dataResponse;
       } else {
-        return dataResponse!;
+        return dataResponse;
       }
     } catch (e) {
       print(e);
-      return dataResponse!;
+      return dataResponse;
     }
   }
 
   @override
   Future<List<Vehicle>> getAllOfferVehicles() async {
     Response? response;
-    List<Vehicle>? dataResponse;
+    List<Vehicle> dataResponse = [];
     try {
       response = await client.get('api/vehicle/offer');
       if (response.statusCode == 200) {
@@ -126,27 +123,26 @@ class VehicleService implements VehiclesContract {
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
-          return dataResponse!;
+          return dataResponse;
         } else {
-          return dataResponse!;
+          return dataResponse;
         }
       }
     } on DioError catch (e) {
       if (e.response!.statusCode == 400) {
-        return dataResponse!;
+        return dataResponse;
       } else {
-        return dataResponse!;
+        return dataResponse;
       }
     } catch (e) {
       print(e);
-      return dataResponse!;
+      return dataResponse;
     }
   }
 
   @override
   Future<bool> addToFavorites(int carId, int userId) async {
     Response? response;
-    bool dataResponse;
     try {
       response = await client.post('api/vehicle/addFavorite/' +
           carId.toString() +
@@ -176,7 +172,6 @@ class VehicleService implements VehiclesContract {
   @override
   Future<bool> isFavorite(int carId, int userId) async {
     Response? response;
-    bool dataResponse;
     try {
       response =
           await client.get('api/vehicle/getFavorites/' + userId.toString());
@@ -211,7 +206,6 @@ class VehicleService implements VehiclesContract {
   @override
   Future<bool> removeFromFavorites(int carId, int userId) async {
     Response? response;
-    bool dataResponse;
     try {
       response = await client.post('api/vehicle/removeFavorite/' +
           carId.toString() +
@@ -241,7 +235,7 @@ class VehicleService implements VehiclesContract {
   @override
   Future<List<FavoriteVehicle>> getAllFavoriteVehicles(int userId) async {
     Response? response;
-    List<FavoriteVehicle>? dataResponse;
+    List<FavoriteVehicle> dataResponse = [];
     try {
       response =
           await client.get('api/vehicle/getFavorites/' + userId.toString());
@@ -252,27 +246,27 @@ class VehicleService implements VehiclesContract {
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
-          return dataResponse!;
+          return dataResponse;
         } else {
-          return dataResponse!;
+          return dataResponse;
         }
       }
     } on DioError catch (e) {
       if (e.response!.statusCode == 400) {
-        return dataResponse!;
+        return dataResponse;
       } else {
-        return dataResponse!;
+        return dataResponse;
       }
     } catch (e) {
       print(e);
-      return dataResponse!;
+      return dataResponse;
     }
   }
 
   @override
   Future<Vehicle> getVehicleInfo(int vehicleId) async {
     Response? response;
-    Vehicle? dataResponse;
+    Vehicle dataResponse = Vehicle();
     if (vehicleId == 0) {
       return Vehicle();
     }
@@ -284,20 +278,20 @@ class VehicleService implements VehiclesContract {
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
-          return dataResponse!;
+          return dataResponse;
         } else {
-          return dataResponse!;
+          return dataResponse;
         }
       }
     } on DioError catch (e) {
       if (e.response!.statusCode == 400) {
-        return dataResponse!;
+        return dataResponse;
       } else {
-        return dataResponse!;
+        return dataResponse;
       }
     } catch (e) {
       print(e);
-      return dataResponse!;
+      return dataResponse;
     }
   }
 
@@ -387,7 +381,7 @@ class VehicleService implements VehiclesContract {
   @override
   Future<List<Vehicle>> getVehiclesByUser(int userId) async {
     Response? response;
-    List<Vehicle>? dataResponse;
+    List<Vehicle> dataResponse = [];
     try {
       response = await client.get('api/vehicle/vehiclesByUser/$userId');
       if (response.statusCode == 200) {
@@ -405,20 +399,20 @@ class VehicleService implements VehiclesContract {
         return dataResponse;
       } else {
         if (response.statusCode == 404) {
-          return dataResponse!;
+          return dataResponse;
         } else {
-          return dataResponse!;
+          return dataResponse;
         }
       }
     } on DioError catch (e) {
       if (e.response!.statusCode == 400) {
-        return dataResponse!;
+        return dataResponse;
       } else {
-        return dataResponse!;
+        return dataResponse;
       }
     } catch (e) {
       print(e);
-      return dataResponse!;
+      return dataResponse;
     }
   }
 }

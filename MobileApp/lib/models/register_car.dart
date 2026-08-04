@@ -64,7 +64,7 @@ class RegisterCar {
     data['isOffer'] = this.isOffer;
     data['features'] = this.features;
     data['price'] = this.price;
-    data['location']=this.location;
+    data['location'] = this.location;
     data['contactPhoneNumber'] = this.contactPhoneNumber;
     data['name'] = this.name;
     data['description'] = this.description;

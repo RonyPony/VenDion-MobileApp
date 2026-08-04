@@ -1,23 +1,22 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:vendion/config/app_constants.dart';
 import 'package:vendion/helpers/string_extensions.dart';
-import 'package:vendion/models/user_response.dart';
+import 'package:vendion/l10n/app_localizations.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/providers/auth_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
 import 'package:vendion/screens/car_details_screen.dart';
 import 'package:vendion/screens/filters_screen.dart';
-import 'package:vendion/screens/notifications_screen.dart';
 import 'package:vendion/widgets/bottom_menu.dart';
 import 'package:vendion/widgets/carrousel.dart';
 import 'package:vendion/widgets/drawer.dart';
+import 'package:vendion/widgets/notification_button.dart';
+import 'package:vendion/widgets/vehicle_image.dart';
 
 import '../models/vehicles.dart';
 import '../widgets/main_button_widget.dart';
-import '../widgets/textBox_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   static String routeName = "/homeScreen";
@@ -27,35 +26,38 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  //0 is all
-  //1 is new
-  //2 is used
-  int _carConditions = 0;
   bool isSearching = false;
 
   bool isSearchingLoading = false;
+  late final Future<List<Vehicle>> _offersFuture;
+  late final Future<List<Vehicle>> _recommendedVehiclesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final vehicleProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    _offersFuture = vehicleProvider.getAllOfferVehicle();
+    _recommendedVehiclesFuture = _loadRecommendedVehicles(vehicleProvider);
+  }
+
+  Future<List<Vehicle>> _loadRecommendedVehicles(
+    VehiclesProvider vehicleProvider,
+  ) async {
+    final authProvider =
+        Provider.of<AuthenticationProvider>(context, listen: false);
+    final user = await authProvider.getCurrentUser();
+    return vehicleProvider.getAllAvailableVehicles(user.id ?? 0);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         drawer: GeneralDrawer(),
         // bottomNavigationBar: BottomMenu(),
-        backgroundColor: Colors.white,
         appBar: AppBar(
           toolbarHeight: MediaQuery.of(context).size.height * .1,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 20),
-              child: GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, NotificationsScreen.routeName);
-                  },
-                  child: SvgPicture.asset("assets/notification-active.svg")),
-            )
-          ],
+          actions: const [NotificationButton()],
           title: const Text(
             "VenDion",
             textAlign: TextAlign.center,
@@ -74,29 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildSearchSection(),
                   _buildCarrouser(),
-                  FutureBuilder<Widget>(
-                    future: _buildRecommendedSection(
-                        MediaQuery.of(context).size.width * .30),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Text("Error ");
-                      }
-
-                      if (!snapshot.hasData) {
-                        return Text("No data found");
-                      }
-
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
-                      }
-
-                      if (snapshot.hasData &&
-                          snapshot.connectionState == ConnectionState.done) {
-                        return snapshot.data!;
-                      }
-                      return Text("no data");
-                    },
-                  ),
+                  _buildRecommendedSection(
+                      MediaQuery.of(context).size.width * .30),
                   SizedBox(
                     height: MediaQuery.of(context).size.height * .15,
                   )
@@ -110,14 +91,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
   }
 
-  Future<Widget> _buildRecommendedSection(double ancho) async {
+  Widget _buildRecommendedSection(double ancho) {
     final vehicleProvider =
         Provider.of<VehiclesProvider>(context, listen: false);
-    final authProv =
-        Provider.of<AuthenticationProvider>(context, listen: false);
-    UserResponse usr = await authProv.getCurrentUser();
-    Future<List<Vehicle>> _allVehicles =
-        vehicleProvider.getAllAvailableVehicles(usr.id!);
 
     return Padding(
       padding: const EdgeInsets.only(left: 8, right: 8, top: 20),
@@ -130,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                "Recommended",
+                context.l10n.t('recommended'),
                 style: TextStyle(
-                  color: Color(0xff040415),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   fontSize: 20,
                   fontFamily: "Poppins",
                   fontWeight: FontWeight.w500,
@@ -144,10 +120,10 @@ class _HomeScreenState extends State<HomeScreen> {
               Opacity(
                 opacity: 0.40,
                 child: Text(
-                  "See all",
+                  context.l10n.t('seeAll'),
                   textAlign: TextAlign.right,
                   style: TextStyle(
-                    color: Color(0xff040415),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                     fontSize: 16,
                     fontFamily: "Poppins",
                     fontWeight: FontWeight.w500,
@@ -157,14 +133,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           FutureBuilder<List<Vehicle>>(
-            future: _allVehicles,
+            future: _recommendedVehiclesFuture,
             builder: (context, vehicleListSnapshot) {
               if (vehicleListSnapshot.connectionState ==
                   ConnectionState.waiting) {
                 return CircularProgressIndicator(color: Color(0xffff5b00));
               }
               if (vehicleListSnapshot.hasError) {
-                return Text("Error");
+                return Text(context.l10n.t('error'));
               }
               if (vehicleListSnapshot.hasData &&
                   vehicleListSnapshot.connectionState == ConnectionState.done) {
@@ -177,12 +153,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemCount: vehicleListSnapshot.data!.length,
                   itemBuilder: (context, index) {
                     Vehicle project = vehicleListSnapshot.data![index];
-                    final authProvider = Provider.of<AuthenticationProvider>(
-                        context,
-                        listen: false);
-                    Future<UserResponse> currentUser =
-                        authProvider.getCurrentUser();
-
                     if (!project.isOffer!) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 20),
@@ -195,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
 
-              return Text("No info");
+              return Text(context.l10n.t('noData'));
             },
           ),
           // Padding(
@@ -241,7 +211,9 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 65,
               width: MediaQuery.of(context).size.width * .8,
               decoration: BoxDecoration(
-                  color: const Color(0xffedeeef),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xff1d1d24)
+                      : AppColors.lightSurface,
                   borderRadius: BorderRadius.circular(10)),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -256,18 +228,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: MediaQuery.of(context).size.width * .65,
                       child: TextField(
                         onChanged: (value) {
-                          if (value == "") {
-                            isSearching = false;
-                          } else {
-                            isSearching = true;
+                          final nextIsSearching = value.isNotEmpty;
+                          if (nextIsSearching != isSearching) {
+                            setState(() {
+                              isSearching = nextIsSearching;
+                            });
                           }
-                          setState(() {});
                         },
                         decoration: InputDecoration(
                             border: OutlineInputBorder(
                                 borderSide: BorderSide.none,
                                 borderRadius: BorderRadius.circular(20)),
-                            hintText: "Search for Honda Pilot 7-Passenger"),
+                            hintText: context.l10n.t('searchHint')),
                       ),
                     )
                   ],
@@ -301,24 +273,21 @@ class _HomeScreenState extends State<HomeScreen> {
         child: CustomBtn(
           mainBtn: true,
           enable: !isSearchingLoading,
-          loadingText: "Searching...",
+          loadingText: context.l10n.t('searching'),
           onTap: () {
             setState(() {
               isSearchingLoading = true;
             });
           },
-          text: "Search",
+          text: context.l10n.t('search'),
         ),
       ),
     );
   }
 
   _buildCarrouser() {
-    final vehicleProvider =
-        Provider.of<VehiclesProvider>(context, listen: false);
-    Future<List<Vehicle>> offers = vehicleProvider.getAllOfferVehicle();
     return FutureBuilder<List<Vehicle>>(
-      future: offers,
+      future: _offersFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return LinearProgressIndicator(
@@ -327,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
         if (snapshot.hasError) {
-          return Text("Error");
+          return Text(context.l10n.t('error'));
         }
         if (snapshot.hasData &&
             snapshot.connectionState == ConnectionState.done) {
@@ -337,14 +306,14 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
-        return Text("No content available");
+        return Text(context.l10n.t('noContent'));
       },
     );
   }
 
   _buildaRecommended(Vehicle vehicle, VehiclesProvider provider) {
     bool hasVideo = true;
-    bool liked = vehicle.isFavorite!;
+    bool liked = vehicle.isFavorite ?? false;
     Future<VehiclePhoto> _carPhoto = provider.getVechiclePhoto(vehicle.id!);
 
     return Container(
@@ -361,83 +330,35 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FutureBuilder<VehiclePhoto>(
-              future: _carPhoto,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        color: Color(0xffff5b00),
-                      ),
-                    ],
-                  );
-                }
-                if (snapshot.hasError || snapshot.data!.image == null) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        "assets/placeholder.png",
-                        scale: 3,
-                      ),
-                    ],
-                  );
-                }
-                if (snapshot.hasData &&
-                    snapshot.connectionState == ConnectionState.done) {
-                  return Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              fit: BoxFit.fill,
-                              image: Image.memory(
-                                      base64Decode(snapshot.data!.image!))
-                                  .image,
-                            ),
-                          ),
-                        ),
-                      ),
-                      hasVideo
-                          ? Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 160, left: 15),
-                              child: Image.asset("assets/video.png"),
-                            )
-                          : SizedBox(),
-                      liked
-                          ? Padding(
-                              padding: EdgeInsets.only(
-                                  top: 10,
-                                  left:
-                                      MediaQuery.of(context).size.width * .75),
-                              child: GestureDetector(
-                                  onTap: () {
-                                    print("Liked ${vehicle.name}");
-                                  },
-                                  child: SvgPicture.asset("assets/liked.svg")),
-                            )
-                          : Padding(
-                              padding: EdgeInsets.only(
-                                  top: 10,
-                                  left:
-                                      MediaQuery.of(context).size.width * .75),
-                              child: SvgPicture.asset(
-                                "assets/notliked.svg",
-                                width: 26,
-                              ),
-                            )
-                    ],
-                  );
-                }
-                return Text("No data");
-              },
+            Stack(
+              children: [
+                VehiclePhotoFutureImage(
+                  future: _carPhoto,
+                  height: 200,
+                  borderRadius: 24,
+                ),
+                if (hasVideo)
+                  Positioned(
+                    bottom: 12,
+                    left: 14,
+                    child: Image.asset("assets/video.png"),
+                  ),
+                Positioned(
+                  top: 10,
+                  right: 14,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await _toggleFavorite(vehicle, provider);
+                    },
+                    child: SvgPicture.asset(
+                      (vehicle.isFavorite ?? liked)
+                          ? "assets/liked.svg"
+                          : "assets/notliked.svg",
+                      width: 28,
+                    ),
+                  ),
+                ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.only(left: 20, top: 10),
@@ -446,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   vehicle.name!.capitalize(),
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     fontSize: 18,
                     fontFamily: "Poppins",
                     fontWeight: FontWeight.w500,
@@ -459,9 +380,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Opacity(
                 opacity: 0.50,
                 child: Text(
-                  "Price: ${vehicle.price.toString()}  |  Year: ${vehicle.year}",
+                  "${context.l10n.t('price')}: ${vehicle.price.toString()}  |  ${context.l10n.t('year')}: ${vehicle.year}",
                   style: TextStyle(
-                    color: Color(0xff040415),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                     fontSize: 12,
                     fontFamily: "Poppins",
                     fontWeight: FontWeight.w500,
@@ -473,5 +394,42 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _toggleFavorite(
+    Vehicle vehicle,
+    VehiclesProvider provider,
+  ) async {
+    final previous = vehicle.isFavorite ?? false;
+    setState(() {
+      vehicle.isFavorite = !previous;
+    });
+
+    try {
+      final authProvider =
+          Provider.of<AuthenticationProvider>(context, listen: false);
+      final user = await authProvider.getCurrentUser();
+      if (vehicle.id == null || user.id == null) {
+        throw Exception('Missing favorite data');
+      }
+
+      final success = previous
+          ? await provider.removeFromFavorite(vehicle.id!, user.id!)
+          : await provider.addToFavorite(vehicle.id!, user.id!);
+
+      if (!success) {
+        throw Exception('Favorite update failed');
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        vehicle.isFavorite = previous;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.t('favoriteError'))),
+      );
+    }
   }
 }

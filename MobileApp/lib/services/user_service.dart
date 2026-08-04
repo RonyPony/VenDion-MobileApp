@@ -1,4 +1,3 @@
-
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'dart:convert';
@@ -8,7 +7,6 @@ import 'package:vendion/contracts/user_contract.dart';
 import '../helpers/network_util.dart';
 import '../models/change_password_request.dart';
 import '../models/user_response.dart';
-
 
 class UserService implements UserContract {
   @override
@@ -42,8 +40,7 @@ class UserService implements UserContract {
         code: "${response.statusCode}", message: "existsPhoneNumber");
   }
 
-  Future<bool> updateUserProfileImage(
-      FormData data, UserResponse user) async {
+  Future<bool> updateUserProfileImage(FormData data, UserResponse user) async {
     String? errorMessage = '';
     try {
       final client = NetworkUtil.getTokenClient();
@@ -65,7 +62,6 @@ class UserService implements UserContract {
     }
   }
 
-  
   String? _getErrorMessage(Map<String?, dynamic> jsonModel) {
     if (jsonModel['Message'] != null) {
       return jsonModel['Message'];
@@ -119,8 +115,4 @@ class UserService implements UserContract {
       throw Exception('errorDuringChangingPassword');
     }
   }
-  
-  
-  
-
 }

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 class CustomRangeSelect extends StatefulWidget {
   const CustomRangeSelect(
-      {Key? key, required Null Function(RangeValues valores) onChange, required this.min, required this.max})
+      {Key? key,
+      required Null Function(RangeValues valores) onChange,
+      required this.min,
+      required this.max})
       : super(key: key);
-      final double min;
-      final double max;
+  final double min;
+  final double max;
 
   @override
   State<CustomRangeSelect> createState() => _CustomRangeSelectState();
@@ -21,7 +24,6 @@ class _CustomRangeSelectState extends State<CustomRangeSelect> {
         RangeSlider(
           values: _currentRangeValues,
           max: widget.max,
-          
           divisions: 100,
           activeColor: Color(0xffff5b00),
           min: widget.min,
@@ -46,7 +48,6 @@ class _CustomRangeSelectState extends State<CustomRangeSelect> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            
           ],
         )
       ],

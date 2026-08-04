@@ -7,8 +7,6 @@ import '../contracts/photo_contract.dart';
 import '../models/photo.dart';
 import '../models/photoUpload.dart';
 
-
-
 class PhotoService implements PhotoContract {
   @override
   Future<bool> deletePhoto(int photoId) {
@@ -65,8 +63,7 @@ class PhotoService implements PhotoContract {
   Future<Photo> getVehiclePicture(int vehicleId) async {
     Photo _photo = Photo();
     try {
-      var resp =
-          await Dio().get(serverurl + 'api/photos/byVehicle/$vehicleId');
+      var resp = await Dio().get(serverurl + 'api/photos/byVehicle/$vehicleId');
 
       if (resp.statusCode == 200) {
         var lista = resp.data;
@@ -120,7 +117,7 @@ class PhotoService implements PhotoContract {
       print(response.statusCode);
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data["id"];
-      }else{
+      } else {
         return 0;
       }
 
@@ -145,13 +142,12 @@ class PhotoService implements PhotoContract {
 
     return File(result.path);
   }
-  
+
   @override
   Future<bool> setProductMainPicture(int photoId) async {
-    
     try {
-      var resp =
-          await Dio().post(serverurl + 'api/photos/makeProductPicture/$photoId');
+      var resp = await Dio()
+          .post(serverurl + 'api/photos/makeProductPicture/$photoId');
 
       if (resp.statusCode == 200) {
         return true;

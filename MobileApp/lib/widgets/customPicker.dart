@@ -37,7 +37,7 @@ class _CustomPickerState extends State<CustomPicker> {
               ),
               // Provide a background color for the popup.
               color: Colors.white,
-              
+
               // Use a SafeArea widget to avoid system overlaps.
               child: SafeArea(
                 top: false,
@@ -69,7 +69,10 @@ class _CustomPickerState extends State<CustomPicker> {
                       padding: const EdgeInsets.only(left: 8),
                       child: Text(
                         widget.placeHolder + " ",
-                        style: const TextStyle(color: Colors.white,fontSize: 18,fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                     CupertinoButton(
@@ -82,7 +85,7 @@ class _CustomPickerState extends State<CustomPicker> {
                           // squeeze:1,
                           // useMagnifier: true,
                           itemExtent: _kItemExtent,
-  
+
                           looping: false,
                           // This is called when selected item is changed.
                           onSelectedItemChanged: (int selectedItem) {
@@ -96,9 +99,7 @@ class _CustomPickerState extends State<CustomPicker> {
                             return Center(
                               child: Text(
                                 widget.options[index].toUpperCase(),
-                                style: TextStyle(
-                                  color: Color(0xffff5b00)
-                                ),
+                                style: TextStyle(color: Color(0xffff5b00)),
                               ),
                             );
                           }),
@@ -109,14 +110,16 @@ class _CustomPickerState extends State<CustomPicker> {
                         children: [
                           Text(
                             widget.options[_selectedFruit],
-                            style:  TextStyle(
-                              fontSize: 18.0,
-                              color: Colors.white.withOpacity(0.8)
-                            ),
+                            style: TextStyle(
+                                fontSize: 18.0,
+                                color: Colors.white.withOpacity(0.8)),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: SvgPicture.asset("assets/arrowDown.svg",color: Colors.white,),
+                            child: SvgPicture.asset(
+                              "assets/arrowDown.svg",
+                              color: Colors.white,
+                            ),
                           )
                         ],
                       ),

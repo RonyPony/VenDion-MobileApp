@@ -14,7 +14,6 @@ import '../models/new_password_request.dart';
 import '../models/user_login_response.dart';
 import '../models/user_response.dart';
 
-
 class AuthenticationService implements AuthContract {
   static const String? AUTHENTICATION_NUMBER_KEY =
       'amountOfTimesUserHasAuthenticated';
@@ -57,35 +56,40 @@ class AuthenticationService implements AuthContract {
     }
   }
 
-  Future<dynamic> loginRequest(
-      ClientUser user,bool remember) async {
+  Future<dynamic> loginRequest(ClientUser user, bool remember) async {
     if (user.email == null) {
       return GeneralError(message: "email is empty");
     } else if (user.password == null) {
       return GeneralError(message: "Password is empty");
     }
-    
+
     Response? response;
     try {
-      var formData = {'email': user.email, 'password': user.password,'rememberMe':remember};
+      var formData = {
+        'email': user.email,
+        'password': user.password,
+        'rememberMe': remember
+      };
       response = await client.post('api/user/login', data: formData);
-      if (response.statusCode==200) {
+      if (response.statusCode == 200) {
         UserLoginReponse dataResponse =
             await UserLoginReponse.fromJson(response.data);
         UserResponse usr = UserResponse(
-          email: dataResponse.email,        
+          email: dataResponse.email,
         );
         currentUser = usr;
         return dataResponse;
-      }else{
-        if (response.statusCode==404) {
-          return UserLoginReponse(hasError: true,errorDetails: "User not found, please create an account.");
+      } else {
+        if (response.statusCode == 404) {
+          return UserLoginReponse(
+              hasError: true,
+              errorDetails: "User not found, please create an account.");
         }
       }
     } on DioError catch (e) {
-      if(e.response!.statusCode==400){
+      if (e.response!.statusCode == 400) {
         return e.response!.statusMessage;
-      }else{
+      } else {
         return "Server returner unknown error";
       }
     } catch (e) {
@@ -95,11 +99,9 @@ class AuthenticationService implements AuthContract {
 
   @override
   Future<dynamic> searchUserByEmail(String? email) async {
-    
-    
-
     var response = await client.post('api/user/findByEmail/$email');
-    UserLoginReponse dataResponse = await UserLoginReponse.fromJson(response.data);
+    UserLoginReponse dataResponse =
+        await UserLoginReponse.fromJson(response.data);
     print(dataResponse);
     return dataResponse;
   }
@@ -107,38 +109,38 @@ class AuthenticationService implements AuthContract {
   @override
   Future<UserLoginReponse> logInUser(ClientUser user, bool remember) async {
     final sharedPreferences = await SharedPreferences.getInstance();
-    
+
     // FlutterWoocommerce(
     //     url: serverurl, consumerKey: apikey, consumerSecret: secret);
     var result = await loginRequest(
-        ClientUser(email: user.email, password: user.password),remember);
-    if (result==null) {
+        ClientUser(email: user.email, password: user.password), remember);
+    if (result == null) {
       return UserLoginReponse(
-          hasError: true,
-          errorDetails: "Credenciales incorrectas");
+          hasError: true, errorDetails: "Credenciales incorrectas");
     }
     if (result is UserLoginReponse) {
       if (remember) {
         // getCurrentLoggedUser();
-        currentUser!.id=result.id;
+        currentUser!.id = result.id;
         currentUser!.firstName = result.name;
         currentUser!.lastName = result.lastName;
         currentUser!.birthDate = result.bornDate;
         currentUser!.email = result.email;
-        
+
         final jsonData = jsonEncode(currentUser!.toJson());
         sharedPreferences.setString(SAVED_USER_KEY!, jsonData);
       } else {
         await sharedPreferences.remove(SAVED_USER_KEY!);
       }
       await _incrementNumberOfLogins();
-      result.hasError=false;
+      result.hasError = false;
       return result;
     } else {
       print('error');
     }
 
-    return UserLoginReponse(hasError: true,errorDetails: "Information is not correct, try again");
+    return UserLoginReponse(
+        hasError: true, errorDetails: "Information is not correct, try again");
 
     // if (result is! GeneralError) {
     //   RequestResponse AuthedUser = result;
@@ -226,6 +228,7 @@ class AuthenticationService implements AuthContract {
     final sharedPreferences = await SharedPreferences.getInstance();
     sharedPreferences.remove(NetworkUtil.AUTH_TOKEN_KEY!);
     sharedPreferences.remove(NetworkUtil.AUTH_TOKEN_DATE!);
+    sharedPreferences.remove(SAVED_USER_KEY!);
   }
 
   @override
@@ -237,7 +240,7 @@ class AuthenticationService implements AuthContract {
       final response = await client.post('api/user', data: user.toJson());
 
       if (response.statusCode! < 400) {
-        serverResponse.success=true;
+        serverResponse.success = true;
         return serverResponse;
       }
       //duplicateEmail
@@ -247,9 +250,9 @@ class AuthenticationService implements AuthContract {
       //userNotFound
 
       serverResponse.message = _getErrorMessage(response.data);
-      serverResponse.success=false;
+      serverResponse.success = false;
       // serverResponse.message="RegistrationError.";
-      serverResponse.details=response.toString();
+      serverResponse.details = response.toString();
       return serverResponse;
     } catch (e) {
       serverResponse.message = e.toString();
@@ -257,23 +260,22 @@ class AuthenticationService implements AuthContract {
       if (e is DioError) {
         serverResponse.message = e.message;
       }
-      
+
       return serverResponse;
     }
   }
 
   String? _getErrorMessage(dynamic data) {
     if (data is String) {
-      
       switch (data) {
-      case "duplicateEmail":
-        return "Este correo electronico ya existe, por favor accede.";
-        break;
-      default:
-      return "Error desconocido";
+        case "duplicateEmail":
+          return "Este correo electronico ya existe, por favor accede.";
+          break;
+        default:
+          return "Error desconocido";
+      }
     }
-    }
-    
+
     // if (jsonModel['Message'] != null) {
     //   return jsonModel['Message'];
     // } else if (jsonModel['message'] != null) {
@@ -432,8 +434,6 @@ class AuthenticationService implements AuthContract {
       return 0;
     }
   }
-
-  
 
   @override
   Future<ClientUser> getTempUser() async {

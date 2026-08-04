@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -28,10 +26,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
   final TextEditingController repPass = TextEditingController();
-  
+
   final _formKey = GlobalKey<FormState>();
-  
+
   bool isRegistering = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passController.dispose();
+    repPass.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +113,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   _buildForm() {
     const String assetName = 'assets/user.svg';
     final Widget svg = SvgPicture.asset(assetName, semanticsLabel: ' Logo');
-    final Widget lockSvg = SvgPicture.asset('assets/lock.svg', semanticsLabel: ' Logo');
+    final Widget lockSvg =
+        SvgPicture.asset('assets/lock.svg', semanticsLabel: ' Logo');
     return Padding(
         padding: EdgeInsets.only(
             left: 20, right: 20, top: MediaQuery.of(context).size.height * .03),
@@ -127,7 +137,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               CustomTextBox(
                 onChange: () {},
-                svg: Icon(Icons.family_restroom_rounded,color: Colors.grey,),
+                svg: Icon(
+                  Icons.family_restroom_rounded,
+                  color: Colors.grey,
+                ),
                 keyboardType: TextInputType.name,
                 text: "Apellidos",
                 isPassword: false,
@@ -138,7 +151,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               CustomTextBox(
                 onChange: () {},
-                svg: Icon(Icons.email_outlined,color: Colors.grey,),
+                svg: Icon(
+                  Icons.email_outlined,
+                  color: Colors.grey,
+                ),
                 keyboardType: TextInputType.emailAddress,
                 text: "Email",
                 isPassword: false,
@@ -149,7 +165,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               CustomTextBox(
                 onChange: () {},
-                svg: Icon(Icons.phone,color: Colors.grey,),
+                svg: Icon(
+                  Icons.phone,
+                  color: Colors.grey,
+                ),
                 keyboardType: TextInputType.phone,
                 text: "Telefono",
                 isPassword: false,
@@ -197,23 +216,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
             isRegistering = true;
           });
           if (_passController.text != repPass.text) {
-            return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            setState(() {
+              isRegistering = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               backgroundColor: Colors.red,
               content: Text("Las claves no coinciden"),
             ));
+            return;
           }
-          
+
           if (_formKey.currentState!.validate()) {
             final bool emailValid = RegExp(
                     r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                 .hasMatch(_emailController.text);
             if (!emailValid) {
-              return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              setState(() {
+                isRegistering = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 backgroundColor: Colors.red,
                 content: Text("Este correo electronico no es valido"),
               ));
+              return;
             }
-          final provider =
+            final provider =
                 Provider.of<AuthenticationProvider>(context, listen: false);
             UserToRegister usr = UserToRegister(
                 name: _nameController.text,
@@ -227,24 +254,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
               setState(() {
                 isRegistering = false;
               });
-              return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 backgroundColor: Colors.red,
                 content: Text(response.message!),
               ));
+              return;
             }
             if (response.success!) {
               setState(() {
                 isRegistering = false;
               });
-               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 backgroundColor: Colors.green,
                 content: Text("Registro completado"),
               ));
               Navigator.pop(context);
             }
-            
           }
-            
+
           setState(() {
             isRegistering = false;
           });
@@ -362,10 +389,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   _buildAlreadyMember() {
     return Padding(
-      padding: const EdgeInsets.only(top: 10,bottom: 10),
+      padding: const EdgeInsets.only(top: 10, bottom: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children:  [
+        children: [
           const Opacity(
             opacity: 0.40,
             child: Text(
@@ -380,8 +407,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
           GestureDetector(
-            onTap: (){
-              Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
+            onTap: () {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, LoginScreen.routeName, (route) => false);
             },
             child: const Text(
               "Accede ",
@@ -398,5 +426,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
- 
 }

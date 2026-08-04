@@ -1,697 +1,566 @@
-import 'dart:convert';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:vendion/config/app_constants.dart';
 import 'package:vendion/helpers/string_extensions.dart';
+import 'package:vendion/l10n/app_localizations.dart';
 import 'package:vendion/models/user_response.dart';
 import 'package:vendion/models/vehicle_photo.dart';
 import 'package:vendion/models/vehicles.dart';
 import 'package:vendion/providers/auth_provider.dart';
+import 'package:vendion/providers/messages_provider.dart';
 import 'package:vendion/providers/vehicles_provider.dart';
+import 'package:vendion/screens/chat_screen.dart';
 import 'package:vendion/screens/sell_vehicle.dart';
 
 import '../widgets/main_button_widget.dart';
+import '../widgets/vehicle_image.dart';
 import 'home_screen.dart';
 
 class VehicleDetails extends StatefulWidget {
   static String routeName = "/vehicleDetails";
-  VehicleDetails({Key? key}) : super(key: key);
+
+  const VehicleDetails({super.key});
 
   @override
   State<VehicleDetails> createState() => _VehicleDetailsState();
 }
 
 class _VehicleDetailsState extends State<VehicleDetails> {
+  final ValueNotifier<String?> _selectedImage = ValueNotifier<String?>(null);
+
   Vehicle _carInfo = Vehicle();
-  String currentPhotoFromGallery = "";
-  bool isFavorite = false;
-  bool addingToFavorite = false;
+  Future<VehiclePhoto>? _mainPhotoFuture;
+  Future<List<VehiclePhoto>>? _galleryFuture;
+  Future<UserResponse>? _currentUserFuture;
+  bool _isInitialized = false;
+  bool _isFavorite = false;
+  bool _favoriteLoaded = false;
+  bool _favoriteBusy = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)!.settings.arguments! as Vehicle;
+
+    if (_isInitialized && _carInfo.id == args.id) {
+      return;
+    }
+
+    _carInfo = args;
+    final vehiclesProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    final authProvider =
+        Provider.of<AuthenticationProvider>(context, listen: false);
+
+    _mainPhotoFuture = vehiclesProvider.getVechiclePhoto(_carInfo.id!);
+    _galleryFuture = vehiclesProvider.getVechicleGallery(_carInfo.id!);
+    _currentUserFuture = authProvider.getCurrentUser();
+    _selectedImage.value = null;
+    _isInitialized = true;
+    _loadFavoriteState();
+  }
+
+  @override
+  void dispose() {
+    _selectedImage.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadFavoriteState() async {
+    final vehiclesProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    try {
+      final user = await _currentUserFuture;
+      if (user?.id == null || _carInfo.id == null) {
+        return;
+      }
+      final result = await vehiclesProvider.isFavorite(_carInfo.id!, user!.id!);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isFavorite = result;
+        _favoriteLoaded = true;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _favoriteLoaded = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments! as Vehicle;
-    _carInfo = args;
-    // if(_carInfo.features==null){
-    //   _carInfo.features!.add("No Features for this vehicle");
-    // }
-    final provider = Provider.of<VehiclesProvider>(context, listen: false);
-    Future<VehiclePhoto> _carPhoto = provider.getVechiclePhoto(_carInfo.id!);
-    Future<List<VehiclePhoto>> _carGallery =
-        provider.getVechicleGallery(_carInfo.id!);
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        actions: [Icon(Icons.share_rounded)],
+        actions: [
+          IconButton(
+            tooltip: context.l10n.t('share'),
+            icon: const Icon(Icons.share_rounded),
+            onPressed: _shareVehicle,
+          ),
+        ],
       ),
-      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildGallery(_carPhoto, _carGallery),
-            _buildTitleBuilder(),
+            _buildGallery(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          (_carInfo.name ?? context.l10n.t('noData'))
+                              .capitalize(),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Icon(
+                        _isFavorite
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'US ${_carInfo.price ?? 0}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             _buildDescription(),
             _buildFeatures(),
-            _buildOptions(_carInfo.location!),
-            FutureBuilder<Widget>(
-              future: _buildAdd2FavBtn(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator(
-                    color: Color(0xffff5b00),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return Text("Error occur");
-                }
-
-                if (snapshot.hasData &&
-                    snapshot.connectionState == ConnectionState.done) {
-                  return snapshot.data!;
-                }
-                return Text("no data");
-              },
-            ),
-            _buildBuyNowBtn(),
-            SizedBox(
-              height: 40,
-            )
+            _buildOptions(_carInfo.location ?? context.l10n.t('noData')),
+            _buildFavoriteButton(),
+            _buildChatButton(),
+            _buildPrimaryAction(),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildGallery(
-      Future<VehiclePhoto> mainPhoto, Future<List<VehiclePhoto>> gallery) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Stack(
+  Widget _buildGallery() {
+    return FutureBuilder<VehiclePhoto>(
+      future: _mainPhotoFuture,
+      builder: (context, snapshot) {
+        final fallbackImage = snapshot.data?.image;
+
+        return Column(
           children: [
-            FutureBuilder<VehiclePhoto>(
-              future: mainPhoto,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return SizedBox();
-                  // Container(
-                  //   padding: EdgeInsets.only(
-                  //       left: MediaQuery.of(context).size.width * .3, top: 20),
-                  //   child: CircularProgressIndicator(
-                  //     color: Color(0xffff5b00),
-                  //     semanticsLabel: "Loading",
-                  //   ),
-                  // );
-                }
-                if (snapshot.hasError || snapshot.data!.image == null) {
-                  return Padding(
-                    padding: EdgeInsets.only(
-                        left: MediaQuery.of(context).size.width * .2),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          "assets/placeholder.png",
-                          scale: 2,
-                        ),
-                      ],
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: ValueListenableBuilder<String?>(
+                valueListenable: _selectedImage,
+                builder: (context, selectedImage, child) {
+                  final image = selectedImage ?? fallbackImage;
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return VehicleImagePlaceholder(
+                      width: MediaQuery.of(context).size.width * .95,
+                      height: MediaQuery.of(context).size.width * .76,
+                      borderRadius: AppRadius.lg,
+                      loading: true,
+                    );
+                  }
+
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeIn,
+                    child: VehicleImage(
+                      key: ValueKey(image ?? 'empty'),
+                      base64Image: image,
+                      width: MediaQuery.of(context).size.width * .95,
+                      height: MediaQuery.of(context).size.width * .76,
+                      borderRadius: AppRadius.lg,
                     ),
                   );
-                }
-
-                if (snapshot.hasData &&
-                    snapshot.connectionState == ConnectionState.done) {
-                  return Stack(
-                    alignment: AlignmentDirectional.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(9),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: currentPhotoFromGallery == ""
-                              ? Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * .95,
-                                  height:
-                                      MediaQuery.of(context).size.width * .80,
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                        fit: BoxFit.fill,
-                                        image: Image.memory(base64Decode(
-                                                snapshot.data!.image!))
-                                            .image),
-                                  ),
-                                )
-                              : Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * .95,
-                                  height: 300,
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                        fit: BoxFit.fill,
-                                        image: Image.memory(base64Decode(
-                                                currentPhotoFromGallery))
-                                            .image),
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
-                  );
-                }
-                return Image.asset("assets/carDetailsPlaceholder.png");
-              },
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).size.height * .35),
-              child: Row(
-                children: [
-                  FutureBuilder<List<VehiclePhoto>>(
-                    future: gallery,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Row(
-                          children: [
-                            Container(
-                              height: 3,
-                              width: MediaQuery.of(context).size.width,
-                              child: LinearProgressIndicator(
-                                backgroundColor: Colors.white,
-                                color: Color(0xffff5b00),
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                      if (snapshot.hasError) {
-                        return Text("Err");
-                      }
-                      if (snapshot.hasData &&
-                          snapshot.connectionState == ConnectionState.done) {
-                        return Container(
-                          height: 60,
-                          width: MediaQuery.of(context).size.width,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              return snapshot.data!.length >= 2
-                                  ? Container(
-                                      padding: EdgeInsets.only(right: 10),
-                                      decoration: BoxDecoration(),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            currentPhotoFromGallery =
-                                                snapshot.data![index].image!;
-                                          });
-                                        },
-                                        child: Container(
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .height /
-                                              10,
-                                          child: Image.memory(base64Decode(
-                                              snapshot.data![index].image!)),
-                                        ),
-                                      ),
-                                    )
-                                  : SizedBox();
-                            },
-                          ),
-                        );
-                      }
-                      return Text("No Data");
-                    },
-                  ),
-                  // Container(
-                  //   decoration: BoxDecoration(),
-                  //   child: Container(
-                  //     height: MediaQuery.of(context).size.height / 10,
-                  //     child: Image.asset("assets/carDetailsPlaceholder.png"),
-                  //   ),
-                  // ),
-                  // SizedBox(
-                  //   width: 10,
-                  // ),
-                  // Container(
-                  //   decoration: BoxDecoration(),
-                  //   child: Container(
-                  //     height: MediaQuery.of(context).size.height / 10,
-                  //     child: Image.asset("assets/carDetailsPlaceholder.png"),
-                  //   ),
-                  // ),
-                  // SizedBox(
-                  //   width: 10,
-                  // ),
-                  // Container(
-                  //   decoration: BoxDecoration(),
-                  //   child: Container(
-                  //     height: MediaQuery.of(context).size.height / 10,
-                  //     child: Image.asset("assets/carDetailsPlaceholder.png"),
-                  //   ),
-                  // )
-                ],
+                },
               ),
-            )
+            ),
+            _buildThumbnails(),
           ],
-        )
-      ],
+        );
+      },
     );
   }
 
-  Future<Widget> _buildTitle() async {
-    final prov = Provider.of<VehiclesProvider>(context, listen: false);
-    final authProvider =
-        Provider.of<AuthenticationProvider>(context, listen: false);
-    UserResponse usr = await authProvider.getCurrentUser();
-    bool isFavorite = await prov.isFavorite(_carInfo.id!, usr.id!);
-    Size size = MediaQuery.of(context).size;
-    return Column(
-      children: [
-        Row(
-          children: [
+  Widget _buildThumbnails() {
+    return FutureBuilder<List<VehiclePhoto>>(
+      future: _galleryFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 4,
+            child: LinearProgressIndicator(color: AppColors.primary),
+          );
+        }
+
+        final photos = snapshot.data ?? [];
+        if (snapshot.hasError || photos.length < 2) {
+          return const SizedBox.shrink();
+        }
+
+        return SizedBox(
+          height: 76,
+          child: ValueListenableBuilder<String?>(
+            valueListenable: _selectedImage,
+            builder: (context, selectedImage, child) {
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                scrollDirection: Axis.horizontal,
+                itemCount: photos.length,
+                itemBuilder: (context, index) {
+                  final image = photos[index].image;
+                  final selected = selectedImage == image ||
+                      (selectedImage == null &&
+                          index == 0 &&
+                          image != null &&
+                          image.isNotEmpty);
+
+                  return GestureDetector(
+                    onTap: () {
+                      _selectedImage.value = image;
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 86,
+                      margin: const EdgeInsets.only(right: AppSpacing.sm),
+                      padding: EdgeInsets.all(selected ? 3 : 0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(
+                          color:
+                              selected ? AppColors.primary : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: VehicleImage(
+                        base64Image: image,
+                        width: 82,
+                        height: 64,
+                        borderRadius: AppRadius.md,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDescription() {
+    final description = _carInfo.description ?? context.l10n.t('noData');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.4),
+          ),
+          if (description.length >= 100)
             Padding(
-              padding: const EdgeInsets.only(left: 20, top: 20),
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: Text(
-                _carInfo.name!.capitalize(),
-                style: TextStyle(
-                  color: Color(0xff040415),
-                  fontSize: 22,
-                  fontFamily: "Poppins",
+                context.l10n.t('readMore'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            SizedBox(
-              width: size.width * .4 - _carInfo.name!.length * 5,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: Text(
-                "4.5/5",
-                style: TextStyle(
-                  color: Color(0xffff5b00),
-                  fontSize: 18.64,
-                  fontFamily: "Poppins",
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            SizedBox(width: 6.55),
-            isFavorite
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: Icon(
-                      Icons.star_rounded,
-                      color: Color(0xffff5b00),
-                    ),
-                  )
-                : SizedBox()
-          ],
-        ),
-        Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: Opacity(
-                opacity: 0.50,
-                child: Text(
-                  "US ${_carInfo.price.toString()}",
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: Color(0xff040415),
-                    fontSize: 14,
-                    fontFamily: "Poppins",
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        )
-      ],
-    );
-  }
-
-  _buildDescription() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, left: 20),
-      child: Opacity(
-        opacity: 0.40,
-        child: Column(
-          children: [
-            Text(
-              _carInfo.description!,
-              style: TextStyle(
-                fontSize: 16,
-              ),
-            ),
-            _carInfo.description!.length >= 100
-                ? Row(
-                    children: [
-                      Text(
-                        "Read more...",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xffff5b00),
-                        ),
-                      ),
-                    ],
-                  )
-                : SizedBox()
-          ],
-        ),
-      ),
-    );
-  }
-
-  _buildFeatures() {
-    List<String> features = [];
-    for (String feature in _carInfo.features!.split(',')) {
-      features.add(feature);
-    }
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, left: 20),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // _carInfo.features!.length > 2
-              //     ? Icon(
-              //         Icons.arrow_back_ios_new_rounded,
-              //         size: 25,
-              //         color: Color(0xffff5b00),
-              //       )
-              //     : SizedBox(),
-
-              // SizedBox(width: MediaQuery.of(context).size.width*.8,),
-              Container(
-                // color: Colors.red,
-                height: 70,
-                width: MediaQuery.of(context).size.width * .8,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: features.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return aFeature(features[index]
-                        .replaceAll('[', '')
-                        .replaceAll(']', ''));
-                  },
-                ),
-              ),
-              _carInfo.features!.length > 2
-                  ? Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 25,
-                      color: Color(0xffff5b00),
-                    )
-                  : SizedBox()
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 30),
-                child: Opacity(
-                  opacity: 0.40,
-                  child: Text(
-                    "See all",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      color: Color(0xff040415),
-                      fontSize: 16,
-                      fontFamily: "Poppins",
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              )
-            ],
-          ),
         ],
       ),
     );
   }
 
-  aFeature(String s) {
+  Widget _buildFeatures() {
+    final features = (_carInfo.features ?? '')
+        .split(',')
+        .map(
+            (feature) => feature.replaceAll('[', '').replaceAll(']', '').trim())
+        .where((feature) => feature.isNotEmpty)
+        .toList();
+
+    if (features.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
-      padding: const EdgeInsets.only(right: 10),
-      child: Chip(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-                topRight: Radius.circular(5),
-                bottomRight: Radius.circular(5),
-                bottomLeft: Radius.circular(5),
-                topLeft: Radius.circular(5))),
-        backgroundColor: Color(0xffff5b00),
-        label: Container(
-          // width: 100,
-          child: Row(
-            children: [
-              Icon(
-                Icons.check_box_rounded,
-                color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 20, 0, 0),
+      child: SizedBox(
+        height: 42,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: features.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.sm),
+              child: Chip(
+                backgroundColor: AppColors.primary,
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_box_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      features[index],
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
-              Text(
-                s,
-                style: TextStyle(color: Colors.white),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptions(String location) {
+    final items = [
+      _InfoItem(Icons.handshake_rounded, context.l10n.t('contactDealer')),
+      _InfoItem(Icons.car_rental, context.l10n.t('vehicleDetails')),
+      _InfoItem(Icons.location_on, location),
+      _InfoItem(Icons.attach_money, context.l10n.t('financingAvailable')),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Wrap(
+        spacing: AppSpacing.md,
+        runSpacing: AppSpacing.sm,
+        children: items
+            .map(
+              (item) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(item.icon, size: 18, color: AppColors.primary),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(item.label),
+                ],
               ),
-            ],
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildFavoriteButton() {
+    if (!_favoriteLoaded) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 20),
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 56),
+          foregroundColor: _isFavorite ? Colors.white : AppColors.primary,
+          backgroundColor: _isFavorite ? AppColors.primary : Colors.transparent,
+          side: const BorderSide(color: AppColors.primary),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
         ),
-      ),
-    );
-  }
-
-  _buildOptions(String location) {
-    return Opacity(
-      opacity: .5,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 50, top: 15),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.handshake_rounded,
-                    ),
-                    Text("Contact Dealer")
-                  ],
-                ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * .14,
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.car_rental),
-                    Text("Detalles del vehiculo")
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.location_on),
-                    Text(
-                      location,
-                    )
-                  ],
-                ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * .05,
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.attach_money),
-                    Text("Financiamiento Disponible")
-                  ],
-                ),
-              ],
-            )
-          ],
+        onPressed: _favoriteBusy ? null : _toggleFavorite,
+        icon:
+            Icon(_isFavorite ? Icons.star_rounded : Icons.star_border_rounded),
+        label: Text(
+          _favoriteBusy
+              ? context.l10n.t('updating')
+              : _isFavorite
+                  ? context.l10n.t('removeFromFavorites')
+                  : context.l10n.t('addToFavorites'),
         ),
       ),
     );
   }
 
-  _buildBuyNowBtn() {
-    final prov = Provider.of<AuthenticationProvider>(context, listen: false);
-    Future<UserResponse> currentUser = prov.getCurrentUser();
+  Widget _buildChatButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 54),
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+        ),
+        onPressed: _openSellerChat,
+        icon: const Icon(Icons.forum_rounded),
+        label: Text(context.l10n.t('chatWithSeller')),
+      ),
+    );
+  }
+
+  Widget _buildPrimaryAction() {
     return FutureBuilder<UserResponse>(
-      future: currentUser,
+      future: _currentUserFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        }
-        if (snapshot.hasError) {
-          return Text("Error getting current user info");
-        }
-
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
-          if (_carInfo.createdBy == snapshot.data!.id) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 30),
-              child: CustomBtn(
-                mainBtn: true,
-                onTap: () {
-                  // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  //   content: Text(
-                  //       "En estos momentos no puedes editar este vehiculo, intentalo mas tarde"),
-                  // ));
-                  Navigator.pushNamed(context, SellScreen.routeName,
-                      arguments: _carInfo.id);
-                },
-                enable: true,
-                text: "Editar Vehiculo",
-              ),
-            );
-          } else {
-            return Padding(
-              padding: const EdgeInsets.only(top: 30),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, HomeScreen.routeName, (route) => false);
-                },
-                child: CustomBtn(
-                  mainBtn: true,
-                  onTap: () {},
-                  enable: true,
-                  text: "Me interesa",
-                ),
-              ),
-            );
-          }
-        }
-
-        return Text("No info");
-      },
-    );
-  }
-
-  Future<Widget> _buildAdd2FavBtn() async {
-    final prov = Provider.of<VehiclesProvider>(context, listen: false);
-    final authProvider =
-        Provider.of<AuthenticationProvider>(context, listen: false);
-    UserResponse usr = await authProvider.getCurrentUser();
-    bool isFavorite = await prov.isFavorite(_carInfo.id!, usr.id!);
-
-    return !isFavorite
-        ? Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: GestureDetector(
-              onTap: () async {
-                setState(() {
-                  addingToFavorite = true;
-                });
-                final authProv =
-                    Provider.of<AuthenticationProvider>(context, listen: false);
-                UserResponse usr = await authProv.getCurrentUser();
-                // prov.addToFavorite(_carInfo.id!, usr.id!);
-                Future.delayed(Duration(seconds: 2), () {
-                  setState(() {});
-                });
-                prov.addToFavorite(_carInfo.id!, usr.id!);
-              },
-              child: Container(
-                width: MediaQuery.of(context).size.width * .8,
-                height: 64,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey.withOpacity(.2),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      !addingToFavorite ? "Add To Favorites" : "Updating...",
-                      style: TextStyle(
-                        color: !addingToFavorite
-                            ? Color(0xffff5b00)
-                            : Color(0xffff5b00).withOpacity(.5),
-                        fontSize: 18,
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        : Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: GestureDetector(
-              onTap: () async {
-                setState(() {
-                  addingToFavorite = false;
-                });
-                final authProv =
-                    Provider.of<AuthenticationProvider>(context, listen: false);
-                UserResponse usr = await authProv.getCurrentUser();
-                // prov.addToFavorite(_carInfo.id!, usr.id!);
-                Future.delayed(Duration(seconds: 1), () {
-                  setState(() {});
-                });
-                bool x = await prov.removeFromFavorite(_carInfo.id!, usr.id!);
-                print(x);
-              },
-              child: Container(
-                width: MediaQuery.of(context).size.width * .8,
-                height: 64,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Color(0xffff5b00),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Remove from Favorites",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          return const Padding(
+            padding: EdgeInsets.only(top: 30),
+            child: Center(child: CircularProgressIndicator()),
           );
-  }
-
-  _buildTitleBuilder() {
-    return FutureBuilder<Widget>(
-      future: _buildTitle(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return SizedBox();
         }
         if (snapshot.hasError) {
-          return Text("An Error was found");
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Text(context.l10n.t('currentUserError')),
+          );
         }
 
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
-          return snapshot.data!;
-        }
-
-        return Text("No info");
+        final isOwner = _carInfo.createdBy == snapshot.data?.id;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
+          child: CustomBtn(
+            mainBtn: true,
+            onTap: () {
+              if (isOwner) {
+                Navigator.pushNamed(
+                  context,
+                  SellScreen.routeName,
+                  arguments: _carInfo.id,
+                );
+              } else {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, HomeScreen.routeName, (route) => false);
+              }
+            },
+            enable: true,
+            text: isOwner
+                ? context.l10n.t('editVehicle')
+                : context.l10n.t('interested'),
+          ),
+        );
       },
     );
   }
+
+  Future<void> _toggleFavorite() async {
+    final vehiclesProvider =
+        Provider.of<VehiclesProvider>(context, listen: false);
+    final previous = _isFavorite;
+    setState(() {
+      _isFavorite = !previous;
+      _favoriteBusy = true;
+    });
+
+    try {
+      final user = await _currentUserFuture;
+      if (user?.id == null || _carInfo.id == null) {
+        throw Exception('Missing user or vehicle');
+      }
+
+      final success = previous
+          ? await vehiclesProvider.removeFromFavorite(_carInfo.id!, user!.id!)
+          : await vehiclesProvider.addToFavorite(_carInfo.id!, user!.id!);
+
+      if (!success) {
+        throw Exception('Favorite update failed');
+      }
+
+      _carInfo.isFavorite = !previous;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.t('favoriteUpdated'))),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isFavorite = previous;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.t('favoriteError'))),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _favoriteBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _shareVehicle() async {
+    final title = _carInfo.name ?? context.l10n.t('vehicleDetails');
+    final price = _carInfo.price != null ? 'US ${_carInfo.price}' : '';
+    final id = _carInfo.id != null ? '#${_carInfo.id}' : '';
+    final text = [
+      context.l10n.t('shareVehicle'),
+      title,
+      if (price.isNotEmpty) price,
+      if (id.isNotEmpty) id,
+    ].join('\n');
+
+    await SharePlus.instance.share(
+      ShareParams(text: text, subject: title),
+    );
+  }
+
+  Future<void> _openSellerChat() async {
+    final messagesProvider =
+        Provider.of<MessagesProvider>(context, listen: false);
+    final conversation = await messagesProvider.openForVehicle(_carInfo);
+    if (!mounted) {
+      return;
+    }
+    Navigator.pushNamed(
+      context,
+      ChatScreen.routeName,
+      arguments: conversation.id,
+    );
+  }
+}
+
+class _InfoItem {
+  const _InfoItem(this.icon, this.label);
+
+  final IconData icon;
+  final String label;
 }

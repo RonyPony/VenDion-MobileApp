@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -40,6 +39,7 @@ class PhotoProvider with ChangeNotifier {
     var response = await _service.uploadPhoto(photo);
     return response;
   }
+
   Future<bool> setProductMainPicture(int photoId) async {
     final response = await _service.setProductMainPicture(photoId);
     return response;

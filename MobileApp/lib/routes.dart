@@ -1,13 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:vendion/screens/car_details_screen.dart';
+import 'package:vendion/screens/chat_screen.dart';
 import 'package:vendion/screens/favorites_screen.dart';
 import 'package:vendion/screens/filters_screen.dart';
 import 'package:vendion/screens/home_screen.dart';
 import 'package:vendion/screens/login_screen.dart';
+import 'package:vendion/screens/messages_screen.dart';
 import 'package:vendion/screens/my_vehicles_screen.dart';
 import 'package:vendion/screens/notifications_screen.dart';
 import 'package:vendion/screens/profile_screen.dart';
 import 'package:vendion/screens/register_screen.dart';
+import 'package:vendion/screens/settings_screen.dart';
 import 'package:vendion/screens/sell_vehicle.dart';
 
 final Map<String, WidgetBuilder> routes = {
@@ -15,11 +18,14 @@ final Map<String, WidgetBuilder> routes = {
   LoginScreen.routeName: (context) => const LoginScreen(),
   RegisterScreen.routeName: (context) => const RegisterScreen(),
   HomeScreen.routeName: (context) => HomeScreen(),
-  FiltersScreen.routeName: (context) =>  FiltersScreen(),
+  FiltersScreen.routeName: (context) => FiltersScreen(),
   NotificationsScreen.routeName: (context) => NotificationsScreen(),
   FavoriteScreen.routeName: (context) => FavoriteScreen(),
   ProfileScreen.routeName: (context) => ProfileScreen(),
-  SellScreen.routeName:(context) => SellScreen(),
-  VehicleDetails.routeName:((context) => VehicleDetails()),
-  MyVehiclesScreen.routeName:(context) => MyVehiclesScreen(),
+  SellScreen.routeName: (context) => SellScreen(),
+  VehicleDetails.routeName: ((context) => VehicleDetails()),
+  MyVehiclesScreen.routeName: (context) => MyVehiclesScreen(),
+  SettingsScreen.routeName: (context) => const SettingsScreen(),
+  MessagesScreen.routeName: (context) => const MessagesScreen(),
+  ChatScreen.routeName: (context) => const ChatScreen(),
 };

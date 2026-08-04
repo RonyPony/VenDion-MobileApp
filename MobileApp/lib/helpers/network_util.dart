@@ -11,6 +11,8 @@ class NetworkUtil {
   static const String? AUTH_TOKEN_KEY = 'authTokenKey';
   static const String? AUTH_TOKEN_DATE = 'authTokenKeyDate';
   static const String? TEMP_USER_KEY = 'temporaryUserKeyToRegiste';
+  static const Duration requestTimeout = Duration(seconds: 10);
+
   static Dio getClientWithAuthorization(String? username, String? password) {
     final Dio dio = _createTokenClient();
     dio.options.validateStatus = (status) {
@@ -25,7 +27,6 @@ class NetworkUtil {
   static Dio getClient() {
     final Dio dio = _createClient();
     dio.options.followRedirects = true;
-    dio.options.connectTimeout = const Duration(seconds: 5);
     dio.options.validateStatus = (status) {
       return status! < 500;
     };
@@ -40,7 +41,8 @@ class NetworkUtil {
       return status! < 500;
     };
 
-    dio.interceptors.add(_RequestInterceptor(dio: dio, password: '', username: ''));
+    dio.interceptors
+        .add(_RequestInterceptor(dio: dio, password: '', username: ''));
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
     return dio;
   }
@@ -49,8 +51,9 @@ class NetworkUtil {
     String? apiName = EnvConfig.configs['serverurl'];
     Dio dio = Dio();
     dio.options.baseUrl = '${apiName}';
-    dio.options.connectTimeout = const Duration(seconds: 60);
-    dio.options.receiveTimeout = const Duration(seconds: 90);
+    dio.options.connectTimeout = requestTimeout;
+    dio.options.receiveTimeout = requestTimeout;
+    dio.options.sendTimeout = requestTimeout;
     dio.options.followRedirects = false;
     return dio;
   }
@@ -59,10 +62,18 @@ class NetworkUtil {
     String? apiName = EnvConfig.configs['serverurl'];
     Dio dio = Dio();
     dio.options.baseUrl = '${apiName}api/';
-    dio.options.connectTimeout = const Duration(seconds: 60);
-    dio.options.receiveTimeout = const Duration(seconds: 90);
+    dio.options.connectTimeout = requestTimeout;
+    dio.options.receiveTimeout = requestTimeout;
+    dio.options.sendTimeout = requestTimeout;
     dio.options.followRedirects = false;
     return dio;
+  }
+
+  static bool isTimeoutError(Object error) {
+    return error is DioException &&
+        (error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout ||
+            error.type == DioExceptionType.sendTimeout);
   }
 }
 
@@ -71,7 +82,8 @@ class _RequestInterceptor extends InterceptorsWrapper {
   String? username;
   String? password;
 
-  _RequestInterceptor({required this.dio, required this.username, required this.password});
+  _RequestInterceptor(
+      {required this.dio, required this.username, required this.password});
 
   @override
   void onRequest(

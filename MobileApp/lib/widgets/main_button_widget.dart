@@ -1,69 +1,73 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:vendion/config/app_constants.dart';
 
 class CustomBtn extends StatelessWidget {
-  
-  String text;
-  
-  Function onTap;
-  bool mainBtn;
-  String loadingText;
-  bool enable;
-  
-  CustomBtn(
+  final String text;
+  final VoidCallback onTap;
+  final bool mainBtn;
+  final String loadingText;
+  final bool enable;
+
+  const CustomBtn(
       {Key? key,
       required this.text,
-      required this.onTap, 
+      required this.onTap,
       this.loadingText = "Loading...",
       required this.mainBtn,
       required this.enable})
       : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return mainBtn? GestureDetector(
-      onTap: (){
-        if (enable) {
-          onTap();
-        }
-      },
-      child: Container(
-        width: 366,
-        height: 64,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: enable?Color(0xffff5b00): Color(0xffff5b00).withOpacity(.3),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-                enable?text:loadingText,
-                style: TextStyle(
-                  color: enable?Colors.white: Colors.white.withOpacity(.6),
-                  fontSize: 18,
-                  fontFamily: "Poppins",
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-          ],
-        ),
-    ),
-    )
-    :
-    GestureDetector(
+    final Color enabledColor = mainBtn ? AppColors.primary : Colors.grey;
+    final Color backgroundColor =
+        enable ? enabledColor : enabledColor.withOpacity(.3);
+
+    return mainBtn
+        ? GestureDetector(
             onTap: () {
               if (enable) {
                 onTap();
               }
             },
             child: Container(
-              width: 366,
+              width: double.infinity,
+              constraints: const BoxConstraints(maxWidth: 366),
               height: 64,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: enable
-                    ? Colors.grey
-                    : Colors.grey.withOpacity(.3),
+                color: backgroundColor,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    enable ? text : loadingText,
+                    style: TextStyle(
+                      color:
+                          enable ? Colors.white : Colors.white.withOpacity(.6),
+                      fontSize: 18,
+                      fontFamily: "Poppins",
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        : GestureDetector(
+            onTap: () {
+              if (enable) {
+                onTap();
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxWidth: 366),
+              height: 64,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: backgroundColor,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -83,5 +87,4 @@ class CustomBtn extends StatelessWidget {
             ),
           );
   }
-  
 }
